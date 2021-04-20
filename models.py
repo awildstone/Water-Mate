@@ -64,11 +64,81 @@ class User(db.Model):
 
     collections = db.relationship('user')
 
-    #create a class method to return the lat/long coordinates. We can access this through flask g User object
+    def __repr__(self):
+        return f'<User #{self.id}: {self.username}, {self.email}>'
+    
+    def get_coordinates(self):
+        """Get and return this user's coordinates."""
+        return {
+            "latitude": this.latitude,
+            "longitude": this.longitude
+        }
+    
+    #this should be handled in my signup route and just pass the lat & long into my signup method
+    # def generate_coordindates(self, city, state, zipcode):
+    #     """Generate the latitude and longitude coordindates with a user's city, state, zip."""
+    
+    #If I have time, lets explore if having a @property for password and using @password.setter is a better method for hashing/storing passwords https://www.patricksoftwareblog.com/password-hashing/
+
+    @classmethod
+    def signup(cls, name, email, latitude, longitude, username, password):
+        """Sign up a new user and hash the user password. 
+        Return the new user with hashed password."""
+        
+        salt = bcrypt.gensalt(rounds=12)
+        hashed_pwd = bcrypt.generate_password_hash(password, salt).decode('UTF-8')
+
+        new_user = User(
+            name=name,
+            email=email,
+            latitude=latitude,
+            longitude=longitude,
+            username=username,
+            pasword=hashed_pwd
+        )
+
+        db.session.add(new_user)
+        return new_user
+    
+    @classmethod
+    def authenticate(cls, username, password):
+        """Locate the user in the DB for the respective username/password.
+        If the user is not found, or fails to authenticte return False."""
+
+        user = User.query.filter_by(username=username).first()
+
+        if user:
+            is_auth = bcrypt.check_password_hash(user.password, password)
+            if is_auth:
+                return user
+        return False
+    
+    @classmethod
+    def changePassword(cls, user, curr_password, new_password):
+        """ Validates that the current password is correct, and updates to new password if correct.
+        Returns False if the current password fails to authenticate."""
+
+        is_auth = user.authenticate(user.username, curr_password)
+
+        if is_auth:
+            new_hashed_pwd = bcrypt.generate_password_hash(new_password).decode('UTF-8')
+            user.password = new_hashed_pwd
+            #pass user back to route to commit the session changes
+            return user
+        return False
 
 ####################
 # Plant Models
 ####################
+
+class LightType(db.Model):
+    """A Light Type has 5 potential types that are immutatble for users. 
+    Types are Artificial, North, East, South or West. """
+
+    __tablename__ = 'light_type'
+
+    id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.Text, unique=True, nullable=False)
 
 class LightSource(db.Model):
     """A LightSource has a type, daily total (hours of light), room id, and location id."""
@@ -76,13 +146,23 @@ class LightSource(db.Model):
     __tablename__ = 'light_source'
 
     id = db.Column(db.Integer, primary_key=True)
-    type = db.Column(db.Text, nullable=False)
-    daily_total = db.Column(db.Integer, nullable=False, default=8)
+    type_id = db.Column(db.Integer, db.ForeignKey('light_type', nullable=False))
+    daily_total = db.Column(db.Integer, nullable=False, default=8) #default is 8 for cases where artificial light source is used
     room_id = db.Column(db.Integer, db.ForeignKey('room.id', ondelete='cascade')) #delete if room is deleted
 
     plants = db.relationship('plant', backref='light')
     
-    #daily total needs to be calculated from the g user's location. get the location data from g user class to calculate daily total light.
+    #daily total needs to be calculated from the g user's location & light type. get the location data from g user class to calculate daily total light for the relative location on earth. Adjust daily potential based off the conditions below for the type of light:
+
+    #https://sciencepickle.com/earth-systems/coordinate-system/
+    #Latitudes have positive and negative values. Northern Hemisphere latitudes are positive, and negative latitudes occur in the Southern Hemisphere
+    #Northern hemisphere has lowsunlight in northern windows, while southern hemisphere has the most sunlight from northern windows.
+    #In the Northern Hemisphere, north is to the left. The Sun rises in the east (far arrow), culminates in the south (to the right) while moving to the right, and sets in the west (near arrow). Both rise and set positions are displaced towards the north in midsummer and the south in midwinter.
+    
+    #Longitudes have positive and negative values. Positive longitudes are in the Eastern Hemisphere (east of the Prime Meridian), and negative occur in the Western Hemisphere (west of 0º).
+    # In the Southern Hemisphere, south is to the left. The Sun rises in the east (near arrow), culminates in the north (to the right) while moving to the left, and sets in the west (far arrow). Both rise and set positions are displaced towards the south in midsummer and the north in midwinter.
+
+    #in both southern and northern hemisphere we can asume that east facing windows recieve the most light in the morning up until the midday, and then west facing windows recieve the most light from midday to evening and the temps will be hotter.
 
  class PlantType(db.Model):
      """A PlantType has a name and base water schedule.
