@@ -1,3 +1,5 @@
 keys.py
 /venv
 __pycache__
+seed.py
+/generator

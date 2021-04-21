@@ -22,25 +22,25 @@ def connect_db(app):
 class Collection(db.Model):
     """A Collection has a name, user id, and holds rooms."""
 
-    __tablename__ = 'collection'
+    __tablename__ = 'collections'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='cascade')) #delete if user is deleted
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='cascade')) #delete if user is deleted
 
-    rooms = db.relationship('room', backref='collection')
+    rooms = db.relationship('Room', backref='collection')
 
 
 class Room(db.Model):
     """A Room has a name and holds plants and lightsources."""
 
-    __tablename__ = 'room'
+    __tablename__ = 'rooms'
 
     id = db.Column(db.Integer, primary_key=True)
-    collection_id = db.Column(db.Integer, db.ForeignKey('collection.id', ondelete='cascade', nullable=False)) #nullable=False should raise an Integrity error if we try to delete a collection that contains rooms.
+    collection_id = db.Column(db.Integer, db.ForeignKey('collections.id', ondelete='cascade'), nullable=False) #nullable=False should raise an Integrity error if we try to delete a collection that contains rooms.
 
-    plants = db.relationship('plant', backref='room')
-    lightsources = db.relationship('lightsource', backref='room')
+    plants = db.relationship('Plant', backref='room')
+    lightsources = db.relationship('LightSource', backref='room')
 
 ####################
 # User Model
@@ -52,7 +52,7 @@ class User(db.Model):
     The User class authenticates account and authorizes logins.
     The User class provides location data."""
 
-    __tablename__ = 'user'
+    __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False)
@@ -62,7 +62,7 @@ class User(db.Model):
     username = db.Column(db.Text, unique=True, nullable=False)
     password = db.Column(db.Text, nullable=False)
 
-    collections = db.relationship('user')
+    collections = db.relationship('Collection')
 
     def __repr__(self):
         return f'<User #{self.id}: {self.username}, {self.email}>'
@@ -70,8 +70,8 @@ class User(db.Model):
     def get_coordinates(self):
         """Get and return this user's coordinates."""
         return {
-            "latitude": this.latitude,
-            "longitude": this.longitude
+            "latitude": self.latitude,
+            "longitude": self.longitude
         }
     
     #this should be handled in my signup route and just pass the lat & long into my signup method
@@ -103,7 +103,7 @@ class User(db.Model):
     @classmethod
     def authenticate(cls, username, password):
         """Locate the user in the DB for the respective username/password.
-        If the user is not found, or fails to authenticte return False."""
+        If the user is not found, or fails to authenticate return False."""
 
         user = User.query.filter_by(username=username).first()
 
@@ -128,14 +128,14 @@ class User(db.Model):
         return False
 
 ####################
-# Plant Models
+# Light Models
 ####################
 
 class LightType(db.Model):
-    """A Light Type has 5 potential types that are immutatble for users. 
-    Types are Artificial, North, East, South or West. """
+    """A Light Type has 9 potential types that are immutatble for users. 
+    Types are Artificial, North, East, South, West, Northeast, Northwest, Southeast, Southwest. """
 
-    __tablename__ = 'light_type'
+    __tablename__ = 'light_types'
 
     id = db.Column(db.Integer, primary_key=True)
     type = db.Column(db.Text, unique=True, nullable=False)
@@ -143,14 +143,14 @@ class LightType(db.Model):
 class LightSource(db.Model):
     """A LightSource has a type, daily total (hours of light), room id, and location id."""
 
-    __tablename__ = 'light_source'
+    __tablename__ = 'light_sources'
 
     id = db.Column(db.Integer, primary_key=True)
-    type_id = db.Column(db.Integer, db.ForeignKey('light_type', nullable=False))
+    type_id = db.Column(db.Integer, db.ForeignKey('light_types.id'), nullable=False)
     daily_total = db.Column(db.Integer, nullable=False, default=8) #default is 8 for cases where artificial light source is used
-    room_id = db.Column(db.Integer, db.ForeignKey('room.id', ondelete='cascade')) #delete if room is deleted
+    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id', ondelete='cascade')) #delete if room is deleted
 
-    plants = db.relationship('plant', backref='light')
+    # plants = db.relationship('Plant', backref='light')
     
     #daily total needs to be calculated from the g user's location & light type. get the location data from g user class to calculate daily total light for the relative location on earth. Adjust daily potential based off the conditions below for the type of light:
 
@@ -164,39 +164,45 @@ class LightSource(db.Model):
 
     #in both southern and northern hemisphere we can asume that east facing windows recieve the most light in the morning up until the midday, and then west facing windows recieve the most light from midday to evening and the temps will be hotter.
 
- class PlantType(db.Model):
-     """A PlantType has a name and base water schedule.
-     A PlantType is immutable for Users and accessible to all Users to categorize plants."""
+####################
+# Plant Models
+####################
 
-     __tablename__ = 'plant_type'
+class PlantType(db.Model):
+    """A PlantType has a name and base water schedule.
+    A PlantType is immutable for Users and accessible to all Users to categorize plants."""
 
-     id = db.Column(db.Integer, primary_key=True)
-     name = db.Column(db.Text, unique=True, nullable=False)
-     base_water = db.Column(db.Integer, nullable=False)
+    __tablename__ = 'plant_types'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, unique=True, nullable=False)
+    base_water = db.Column(db.Integer, nullable=False)
 
 class Plant(db.Model):
     """A plant has a name, image, type, room, and waterschedule."""
 
-    __tablename__ = 'plant'
+    __tablename__ = 'plants'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False)
-    image = db.Column(db.Text, nullable=False, default='/static/img/')
-    type_id = db.Column(db.Integer, db.ForeignKey('plant_type'))
-    room_id = db.Column(db.Integer, db.ForeignKey('room'))
+    image = db.Column(db.Text, nullable=False, default='/static/img/succulents.png')
+    type_id = db.Column(db.Integer, db.ForeignKey('plant_types.id'))
+    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'))
+    light_id = db.Column(db.Integer, db.ForeignKey('light_sources.id'))
 
-    water_schedule = db.relationship('water_schedule', backref='plant')
+    water_schedule = db.relationship('WaterSchedule', backref='plant')
+    light = db.relationship('LightSource', backref='plant')
 
 class WaterSchedule(db.Model):
     """A Water Schedule has a next water date, plant id and holds a water history."""
 
-    __tablename__ = 'water_schedule'
+    __tablename__ = 'water_schedules'
 
     id = db.Column(db.Integer, primary_key=True)
     next_date = db.Column(db.DateTime, nullable=False)
-    plant_id = db.Column(db.Integer, db.ForeignKey('plant', ondelete='cascade', nullable=False)) #if plant is deleted, delete schedule
+    plant_id = db.Column(db.Integer, db.ForeignKey('plants.id', ondelete='cascade'), nullable=False) #if plant is deleted, delete schedule
 
-    water_history = db.relationship('water_history', backref='water_schedule')
+    water_history = db.relationship('WaterHistory', backref='water_schedule')
 
 class WaterHistory(db.Model):
     """A Water History has a water date, snooze amount, notes, and a plant and water schedule id."""
@@ -207,5 +213,5 @@ class WaterHistory(db.Model):
     water_date = db.Column(db.DateTime, nullable=False)
     snooze = db.Column(db.Integer)
     notes = db.Column(db.String(200))
-    plant_id = db.Column(db.Integer, db.ForeignKey('plant', nullable=False))
-    water_schedule_id = db.Column(db.Integer, db.ForeignKey('water_schedule', nullable=False))
+    plant_id = db.Column(db.Integer, db.ForeignKey('plants.id'), nullable=False)
+    water_schedule_id = db.Column(db.Integer, db.ForeignKey('water_schedules.id'), nullable=False)
