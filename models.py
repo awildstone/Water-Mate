@@ -32,11 +32,12 @@ class Collection(db.Model):
 
 
 class Room(db.Model):
-    """A Room has a name and holds plants and lightsources."""
+    """A Room has a name, a collection id, and holds plants and lightsources."""
 
     __tablename__ = 'rooms'
 
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, unique=True, nullable=False)
     collection_id = db.Column(db.Integer, db.ForeignKey('collections.id', ondelete='cascade'), nullable=False) #nullable=False should raise an Integrity error if we try to delete a collection that contains rooms.
 
     plants = db.relationship('Plant', backref='room')

@@ -4,18 +4,42 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/bootstrap.css">
     <title>{% block title %} Base {% endblock %}</title>
 </head>
 <body>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-        <div class="alert alert-{{ category }} m-3" role="alert">{{ message }}</div>
-        {% endfor %}
-    {% endif %}
-    {% endwith %}
+    <nav class="navbar navbar-light bg-primary justify-content-between">
+        <div class="container">
+          <a class="navbar-brand text-light" href="/"><i class="fab fa-pagelines">Water Mate</i></a>
+          <ul class="nav navbar-nav flex-row float-right">
+            <li class="nav-item"><a class="nav-link pr-3 text-light" href="/about">About</a></li>
+            <li class="nav-item"><a class="nav-link pr-3 text-light" href="/">Dashboard</a></li>
+            <li class="nav-item"><a class="nav-link pr-3 text-light" href="/">Collection</a></li>
+            <li class="nav-item"><a class="nav-link pr-3 text-light" href="/logout">Logout</a></li>
+            <li class="nav-item"><a class="nav-link pr-3 text-light" href="/login">Login</a></li>
+            <li class="nav-item"><a class="nav-link text-light" href="/signup">Signup</a></li>
+          </ul>
+        </div>
+      </nav>
+    
+    <div class="container text-center mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} m-3" role="alert">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
 
-    {% block content %}
-    {% endblock %}
+        {% block content %}
+        {% endblock %}
+    </div>
+    
+    <!-- Font Awesome -->
+    <script src="https://kit.fontawesome.com/600f9f1052.js" crossorigin="anonymous"></script>
+    <!-- Axios -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.js" integrity="sha512-otOZr2EcknK9a5aa3BbMR9XOjYKtxxscwyRHN6zmdXuRfJ5uApkHB7cz1laWk2g8RKLzV9qv/fl3RPwfCuoxHQ==" crossorigin="anonymous"></script>
+    <!-- App JS -->
+    <script src="static/app.js"></script>
 </body>
 </html>

@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from functools import wraps
 from models import db, connect_db, Collection, Room, User, LightType, LightSource, PlantType, Plant, WaterSchedule, WaterHistory
 # from forms import #import the forms created
+from werkzeug.utils import secure_filename #use for add/edit plant route to upload the image
 
 CURRENT_USER_KEY = 'current_user'
 
