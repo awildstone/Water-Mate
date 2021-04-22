@@ -1,0 +1,25 @@
+{% extends 'base.html'  %}
+
+{% block title %} Add a new Room {% endblock %}
+
+{% block content %}
+
+<h1>Add a new Room</h1>
+
+<p>Please enter the name of your new Room.</p>
+<p>Your room name can be anything you want (Kitchen, Bedroom, Bathroom, etc.) but the name must be unique.</p>
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+    {% for field in form if field.widget.input_type != 'hidden' %}
+    <div class="mb-3">
+      {{ field.label }}
+      {{ field(class_="form-control") }}
+      {% for error in field.errors %}
+      <small class="form-text text-danger">{{ error }}</small>
+      {% endfor %}
+    </div>
+    {% endfor %}
+    <button class="btn btn-success" type="submit">Add Room</button>
+  </form>
+{% endblock %}

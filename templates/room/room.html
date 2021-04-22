@@ -1,0 +1,36 @@
+{% extends 'base.html'  %}
+
+{% block title %} {{ room.name }} {% endblock %}
+
+{% block content %}
+
+<h1>{{ room.name }}</h1>
+<h4>Your {{ room.name }} has the following light sources:</h4>
+
+{% for light in lightsources %}
+<div class="card bg-warning m-2">
+    <div class="card-body">
+      <h5 class="card-title">{{ room.name }}</h5>
+      <p class="card-text"><a href="{{ url_for('view_room', room_id=room.id) }}" class="btn btn-info btn-lg">View Room</a></p>
+      <p class="card-text"><a href="#" class="btn btn-primary m-1">Edit</a><a href="#" class="btn btn-danger m-1">Delete</a></p>
+    </div>
+  </div>
+{% endfor %}
+
+<p><a href="{{ url_for('add_room') }}" class="btn btn-success btn-lg">Add a Light Source</a></p>
+
+<h4>Your {{ room.name }} has the following plants:</h4>
+
+{% for plant in plants %}
+<div class="card bg-success m-2">
+    <div class="card-body">
+      <h5 class="card-title">{{ room.name }}</h5>
+      <p class="card-text"><a href="{{ url_for('view_room', room_id=room.id) }}" class="btn btn-info btn-lg">View Room</a></p>
+      <p class="card-text"><a href="#" class="btn btn-primary m-1">Edit</a><a href="#" class="btn btn-danger m-1">Delete</a></p>
+    </div>
+  </div>
+{% endfor %}
+
+<p><a href="/" class="btn btn-success btn-lg">Add a Plant</a></p>
+
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'base.html'  %}
+
+{% block title %} {{ collection.name }} {% endblock %}
+
+{% block content %}
+
+<h1>{{ collection.name }}</h1>
+<p>Your {{ collection.name }} Collection has the following rooms:</p>
+
+<!-- Loop showing all rooms in the collection. Room name, list of the room's light sources, list of plants, buttons to view room, edit room, or delete room. -->
+<!-- Large Button to add rooms -->
+
+{% for room in rooms %}
+<div class="card border-primary m-3">
+    <div class="card-body">
+      <h5 class="card-title">{{ room.name }}</h5>
+      <p class="card-text"><a href="{{ url_for('view_room', room_id=room.id) }}" class="btn btn-info btn-lg">View Room</a></p>
+      <p class="card-text"><a href="#" class="btn btn-primary m-2">Edit</a><a href="#" class="btn btn-danger m-2">Delete</a></p>
+    </div>
+  </div>
+{% endfor %}
+
+<p><a href="{{ url_for('add_room', collection_id=collection.id) }}" class="btn btn-success btn-lg">Add a Room</a></p>
+
+{% endblock %}

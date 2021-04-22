@@ -63,7 +63,7 @@ class User(db.Model):
     username = db.Column(db.Text, unique=True, nullable=False)
     password = db.Column(db.Text, nullable=False)
 
-    collections = db.relationship('Collection')
+    collections = db.relationship('Collection', backref='user')
     plants = db.relationship('Plant')
 
     def __repr__(self):

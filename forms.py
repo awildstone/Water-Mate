@@ -45,7 +45,7 @@ class AddCollectionForm(FlaskForm):
 class AddRoomForm(FlaskForm):
     """Form for user to add a Room."""
 
-    name = StringField('Collection Name', validators=[InputRequired('You must add a name for your room')]) #add logic to view to raise error if room name is not unique
+    name = StringField('Room Name', validators=[InputRequired('You must add a name for your room')]) #add logic to view to raise error if room name is not unique
 
 def light_types():
     """Get currently available light types from the LightType ORM."""

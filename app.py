@@ -169,6 +169,7 @@ def logout():
 ####################
 
 @app.route('/get-started')
+@auth_required
 def get_started():
     """Show getting started page."""
     return render_template('get_started.html')
@@ -182,3 +183,107 @@ def dashboard():
     plants = user.plants
 
     return render_template('/user/dashboard.html', user=user, plants=plants)
+
+####################
+# Collection Routes
+####################
+
+@app.route('/collections')
+@auth_required
+def show_collections():
+    """Show user collection landing page."""
+
+    collections = g.user.collections
+
+    return render_template('/collection/collections.html', collections=collections)
+
+@app.route('/collection/<int:collection_id>')
+@auth_required
+def view_collection(collection_id):
+    """View a collection by id and all of the rooms inside the collection."""
+
+    collection = Collection.query.get_or_404(collection_id)
+    rooms = collection.rooms
+
+    if collection.user_id != g.user.id:
+        flash('Access Denied.', 'danger')
+        return redirect(url_for('show_collections'))
+
+    return render_template('/collection/collection.html', collection=collection, rooms=rooms)
+
+@app.route('/collections/add-collection', methods=['GET', 'POST'])
+@auth_required
+def add_collection():
+    """Add a new collection."""
+
+    form = AddCollectionForm()
+
+    if form.validate_on_submit():
+        new_collection = Collection(
+            name = form.name.data,
+            user_id = g.user.id,
+        )
+        g.user.collections.append(new_collection)
+        db.session.commit()
+
+        flash(f'New Collection, {new_collection.name} - added!', 'success')
+        return redirect(url_for('show_collections'))
+
+    return render_template('/collection/add_collection.html', form=form)
+
+#Route to edit a collection
+
+#Route to delete a collection
+
+####################
+# Room Routes
+####################
+
+@app.route('/collection/rooms/<int:room_id>')
+@auth_required
+def view_room(room_id):
+    """View a room by id."""
+
+    room = Room.query.get_or_404(room_id)
+    plants = room.plants
+    lightsources = room.lightsources
+
+    owner = room.collection_id.user_id
+
+    if owner != g.user.id:
+        flash('Access Denied.', 'danger')
+        return redirect(url_for('show_collections'))
+
+    return render_template('/room/room.html', room=room, plants=plants, lightsources=lightsources)
+
+@app.route('/collection/<int:collection_id>/add-room', methods=['GET', 'POST'])
+@auth_required
+def add_room(collection_id):
+    """Add a new room to a collection."""
+
+    form = AddRoomForm()
+
+    collection = Collection.query.get_or_404(collection_id)
+    owner = collection.user_id
+
+    if g.user.id == owner:
+        if form.validate_on_submit():
+            new_room = Room(
+                name = form.name.data,
+                collection_id = collection_id
+            )
+            collection.rooms.append(new_room)
+            db.session.commit()
+
+            flash(f'New Room, {new_room.name} - added!', 'success')
+            return redirect(url_for('view_collection', collection_id=collection_id))
+
+    else:
+        flash('Access Denied.', 'danger')
+        return redirect(url_for('show_collections'))
+
+    return render_template('/room/add_room.html', form=form)
+
+#Route to edit a room
+
+#Route to delete a room
