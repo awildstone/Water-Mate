@@ -64,6 +64,7 @@ class User(db.Model):
     password = db.Column(db.Text, nullable=False)
 
     collections = db.relationship('Collection')
+    plants = db.relationship('Plant')
 
     def __repr__(self):
         return f'<User #{self.id}: {self.username}, {self.email}>'
@@ -183,9 +184,10 @@ class Plant(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False)
     image = db.Column(db.Text, nullable=False, default='/static/img/succulents.png')
-    type_id = db.Column(db.Integer, db.ForeignKey('plant_types.id'))
-    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'))
-    light_id = db.Column(db.Integer, db.ForeignKey('light_sources.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    type_id = db.Column(db.Integer, db.ForeignKey('plant_types.id'), nullable=False)
+    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'), nullable=False)
+    light_id = db.Column(db.Integer, db.ForeignKey('light_sources.id'), nullable=False)
 
     water_schedule = db.relationship('WaterSchedule', backref='plant')
     light = db.relationship('LightSource', backref='plant')

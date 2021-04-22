@@ -2,6 +2,7 @@
 
 import os
 from flask import Flask, render_template, request, flash, redirect, session, g, url_for
+from flask_debugtoolbar import DebugToolbarExtension #keep only for development
 from sqlalchemy.exc import IntegrityError
 from functools import wraps
 from models import db, connect_db, Collection, Room, User, LightType, LightSource, PlantType, Plant, WaterSchedule, WaterHistory
@@ -18,43 +19,18 @@ if uri.startswith("postgres://"):
     uri = uri.replace("postgres://", "postgresql://", 1)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = uri
-
-# app.config['SQLALCHEMY_DATABASE_URI'] = (os.environ.get('DATABASE_URL', 'postgres:///water_mate'))
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False # for development only
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'J28r$CC&Z5NCN48O$CEe&749k')
 #Disables Flask file caching
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+toolbar = DebugToolbarExtension(app) # for development only
 
 connect_db(app)
 
 ####################
 # Home/Pages/Error 
-# Routes
-####################
-
-@app.route('/')
-def homepage():
-    """Show homepage."""
-    return render_template('home.html')
-
-@app.errorhandler(404)
-def page_not_found(e):
-    """404 not found."""
-    return render_template('404.html', e=e), 404
-
-@app.errorhandler(403)
-def forbidden(e):
-    """403 forbidden route."""
-    return render_template("403.html", e=e), 403
-
-@app.route('/about')
-def about():
-    """Show about page."""
-    return render_template('about.html')
-
-####################
-# Signup/Login/Logout 
 # Routes
 ####################
 
@@ -77,6 +53,35 @@ def auth_required(f):
             return redirect(url_for('homepage'))
         return f(*args, **kwargs)
     return decorated_function
+
+@app.route('/')
+def homepage():
+    """Show homepage."""
+
+    if g.user:
+        return render_template('home-authed.html')
+
+    return render_template('home.html')
+
+@app.errorhandler(404)
+def page_not_found(e):
+    """404 not found."""
+    return render_template('404.html', e=e), 404
+
+@app.errorhandler(403)
+def forbidden(e):
+    """403 forbidden route."""
+    return render_template("403.html", e=e), 403
+
+@app.route('/about')
+def about():
+    """Show about page."""
+    return render_template('about.html')
+
+####################
+# Signup/Login/Logout 
+# Routes
+####################
 
 @app.route('/signup', methods=['GET', 'POST'])
 def get_location():
@@ -102,30 +107,31 @@ def signup():
     """Signup a new user."""
 
     form = SignupForm()
-
     coords = session['location']
-    latitude = coords['lat']
-    longitude = coords['lng']
 
     if form.validate_on_submit():
         try:
             new_user = User.signup(
                 name=form.name.data,
                 email=form.email.data,
-                latitude=latitude,
-                longitude=longitude,
+                latitude=coords['lat'],
+                longitude=coords['lng'],
                 username=form.username.data,
                 password=form.password.data
                 )
             db.session.commit()
+
         except IntegrityError:
             flash('There was an error creating your account.', 'warning')
             return render_template('/user/signup.html', form=form)
         
         #add the new user to session
         session[CURRENT_USER_KEY] = new_user.id
+        #remove the location variables from the session
+        del session['location']
+
         flash(f'Welcome to Water Mate, {new_user.name}!', 'success')
-        return redirect(url_for('homepage'))
+        return redirect(url_for('get_started'))
 
     return render_template('/user/signup.html', form=form)
 
@@ -142,7 +148,7 @@ def login():
             #add the new user to session
             session[CURRENT_USER_KEY] = user.id
             flash(f'Welcome back, {user.name}!', 'success')
-            return redirect(url_for('homepage'))
+            return redirect(url_for('dashboard'))
         
         flash('Invalid login credentials!', 'danger')
 
@@ -157,3 +163,22 @@ def logout():
 
     flash("You have successfully logged out.", 'success')
     return redirect(url_for('login'))
+
+####################
+# User Routes
+####################
+
+@app.route('/get-started')
+def get_started():
+    """Show getting started page."""
+    return render_template('get_started.html')
+
+@app.route('/dashboard')
+@auth_required
+def dashboard():
+    """Show the user dashboard for a specific user."""
+    #this is probably the most complicated page to figure out the mechanics. I will come back to this page once the other routes are setup and functioning.
+    user = g.user
+    plants = user.plants
+
+    return render_template('/user/dashboard.html', user=user, plants=plants)

@@ -1,0 +1,15 @@
+{% extends 'base.html'  %}
+
+{% block title %} Water Mate {% endblock %}
+
+{% block content %}
+
+<h1><i class="fab fa-pagelines">Water Mate</i></h1>
+
+<p>Welcome to Water Mate!</p>
+<br><img src="/static/img/water_mate.png" width="200">
+
+<p>Visit the <a href="{{url_for('get_started')}}">Getting Started</a> page to learn how to use this app.</p>
+<p>Visit your <a href="{{url_for('dashboard')}}">Dashboard</a> and get watering!</p>
+
+{% endblock %}
