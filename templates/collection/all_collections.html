@@ -1,0 +1,44 @@
+{% extends 'base.html'  %}
+
+{% block title %} Collections {% endblock %}
+
+{% block content %}
+
+<h1>Collections</h1>
+<p>Your houseplant collections.</p>
+
+
+<div class="row">
+  {% for collection in collections %}
+  <div class="col-sm-6">
+    <div class="card m-3 bg-light">
+      <div class="card-body">
+        <h2 class="card-title">{{ collection.name }}</h2>
+        <p class="card-text"><h4><a href="{{ url_for('view_collection', collection_id=collection.id) }}">View Collection</a></h4></p>
+        <div class="row">
+          <div class="col">
+            <a href="{{ url_for('edit_collection', collection_id=collection.id) }}" class="btn btn-primary m-2">Edit</a>
+          </div>
+          <div class="col">
+            <form method="POST" action="{{ url_for('delete_collection', collection_id=collection.id)}}"><button class="btn btn-danger m-2">Delete</button></form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- {% for collection in collections %}
+<div class="card border-primary m-3">
+    <div class="card-body">
+      <h5 class="card-title"><h2>{{ collection.name }}</h2></h5>
+      <p class="card-text"><a href="{{ url_for('view_collection', collection_id=collection.id) }}" class="btn btn-info btn-lg">View Collection</a></p>
+      <p class="card-text"><a href="{{ url_for('edit_collection', collection_id=collection.id) }}" class="btn btn-primary m-2">Edit</a><form method="POST" action="{{ url_for('delete_collection', collection_id=collection.id)}}"><button class="btn btn-danger m-2">Delete</button></form></p>
+    </div>
+  </div>
+{% endfor %} -->
+
+<p><a href="{{ url_for('add_collection') }}" class="btn btn-success btn-lg">Add a Collection</a></p>
+
+{% endblock %}

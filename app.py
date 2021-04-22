@@ -155,6 +155,7 @@ def login():
     return render_template('/user/login.html', form=form)
 
 @app.route('/logout')
+@auth_required
 def logout():
     """Logout the current user."""
 
@@ -195,9 +196,9 @@ def show_collections():
 
     collections = g.user.collections
 
-    return render_template('/collection/collections.html', collections=collections)
+    return render_template('/collection/all_collections.html', collections=collections)
 
-@app.route('/collection/<int:collection_id>')
+@app.route('/collections/<int:collection_id>')
 @auth_required
 def view_collection(collection_id):
     """View a collection by id and all of the rooms inside the collection."""
@@ -231,9 +232,48 @@ def add_collection():
 
     return render_template('/collection/add_collection.html', form=form)
 
-#Route to edit a collection
+@app.route('/collections/<int:collection_id>/edit', methods=['GET', 'POST'])
+@auth_required
+def edit_collection(collection_id):
+    """Edit a collection by id."""
 
-#Route to delete a collection
+    collection = Collection.query.get_or_404(collection_id)
+    owner = collection.user_id
+
+    form = EditCollectionForm(obj=collection)
+
+    if g.user.id == owner:
+        if form.validate_on_submit():
+            collection.name = form.name.data
+            db.session.commit()
+            flash(f'{collection.name} updated!', 'success')
+            return redirect(url_for('show_collections'))
+    else:
+        flash('Access Denied.', 'danger')
+        return redirect(url_for('show_collections'))
+
+    return render_template('/collection/edit_collection.html', form=form)
+
+@app.route('/collections/<int:collection_id>/delete', methods=['POST'])
+@auth_required
+def delete_collection(collection_id):
+    """Delete a collection by id."""
+
+    collection = Collection.query.get_or_404(collection_id)
+    owner = collection.user_id
+
+    if g.user.id == owner:
+        try:
+            db.session.delete(collection)
+            db.session.commit()
+            flash('Collection Deleted.', 'success')
+        except IntegrityError:
+            db.session.rollback()
+            flash('You cannot delete a collection that has rooms!', 'warning')
+    else:
+        flash('Access Denied.', 'danger')
+    
+    return redirect(url_for('show_collections'))
 
 ####################
 # Room Routes
@@ -248,7 +288,8 @@ def view_room(room_id):
     plants = room.plants
     lightsources = room.lightsources
 
-    owner = room.collection_id.user_id
+    collection = Collection.query.get_or_404(room.collection_id)
+    owner = collection.user_id
 
     if owner != g.user.id:
         flash('Access Denied.', 'danger')
@@ -256,7 +297,7 @@ def view_room(room_id):
 
     return render_template('/room/room.html', room=room, plants=plants, lightsources=lightsources)
 
-@app.route('/collection/<int:collection_id>/add-room', methods=['GET', 'POST'])
+@app.route('/collections/<int:collection_id>/add-room', methods=['GET', 'POST'])
 @auth_required
 def add_room(collection_id):
     """Add a new room to a collection."""
@@ -285,5 +326,48 @@ def add_room(collection_id):
     return render_template('/room/add_room.html', form=form)
 
 #Route to edit a room
+@app.route('/collection/rooms/<int:room_id>/edit', methods=['GET', 'POST'])
+@auth_required
+def edit_room(room_id):
+    """Edit a room by id."""
+
+    room = Room.query.get_or_404(room_id)
+    collection = Collection.query.get_or_404(room.collection_id)
+    owner = collection.user_id
+
+    form = EditRoomForm(obj=room)
+
+    if g.user.id == owner:
+        if form.validate_on_submit():
+            room.name = form.name.data
+            db.session.commit()
+            flash(f'{room.name} updated!', 'success')
+            return redirect(url_for('show_collections'))
+    else:
+        flash('Access Denied.', 'danger')
+        return redirect(url_for('show_collections'))
+
+    return render_template('/room/edit_room.html', form=form, room=room)
 
 #Route to delete a room
+@app.route('/collection/rooms/<int:room_id>/delete', methods=['POST'])
+@auth_required
+def delete_room(room_id):
+    """Delete a room by id."""
+
+    room = Room.query.get_or_404(room_id)
+    collection = Collection.query.get_or_404(room.collection_id)
+    owner = collection.user_id
+
+    if g.user.id == owner:
+        try:
+            db.session.delete(room)
+            db.session.commit()
+            flash('Room Deleted.', 'success')
+        except IntegrityError:
+            db.session.rollback()
+            flash('You cannot delete a room that has plants!', 'warning')
+    else:
+        flash('Access Denied.', 'danger')
+
+    return redirect(url_for('view_collection', collection_id=collection.id))

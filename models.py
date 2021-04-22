@@ -3,6 +3,7 @@
 from datetime import datetime
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import UniqueConstraint
 
 bcrypt = Bcrypt()
 db = SQLAlchemy()
@@ -23,9 +24,10 @@ class Collection(db.Model):
     """A Collection has a name, user id, and holds rooms."""
 
     __tablename__ = 'collections'
+    __table_args__ = (db.UniqueConstraint('user_id', 'name'),)
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Text, unique=True, nullable=False)
+    name = db.Column(db.Text, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='cascade')) #delete if user is deleted
 
     rooms = db.relationship('Room', backref='collection')
@@ -35,9 +37,10 @@ class Room(db.Model):
     """A Room has a name, a collection id, and holds plants and lightsources."""
 
     __tablename__ = 'rooms'
+    __table_args__ = (db.UniqueConstraint('collection_id', 'name'),)
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Text, unique=True, nullable=False)
+    name = db.Column(db.Text, nullable=False)
     collection_id = db.Column(db.Integer, db.ForeignKey('collections.id', ondelete='cascade'), nullable=False) #nullable=False should raise an Integrity error if we try to delete a collection that contains rooms.
 
     plants = db.relationship('Plant', backref='room')

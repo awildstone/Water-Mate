@@ -7,30 +7,34 @@
 <h1>{{ room.name }}</h1>
 <h4>Your {{ room.name }} has the following light sources:</h4>
 
-{% for light in lightsources %}
-<div class="card bg-warning m-2">
-    <div class="card-body">
-      <h5 class="card-title">{{ room.name }}</h5>
-      <p class="card-text"><a href="{{ url_for('view_room', room_id=room.id) }}" class="btn btn-info btn-lg">View Room</a></p>
-      <p class="card-text"><a href="#" class="btn btn-primary m-1">Edit</a><a href="#" class="btn btn-danger m-1">Delete</a></p>
-    </div>
-  </div>
-{% endfor %}
+<ul class="list-group">
+    {% for light in lightsources %}
+    <li class="list-group-item list-group-item-action list-group-item-warning"><a href="/">{{ light.name }}</a></li>
+    {% endfor %}
+  </ul>
 
-<p><a href="{{ url_for('add_room') }}" class="btn btn-success btn-lg">Add a Light Source</a></p>
+<p><a href="/" class="btn btn-success">Add a Light Source</a></p>
 
 <h4>Your {{ room.name }} has the following plants:</h4>
 
-{% for plant in plants %}
-<div class="card bg-success m-2">
-    <div class="card-body">
-      <h5 class="card-title">{{ room.name }}</h5>
-      <p class="card-text"><a href="{{ url_for('view_room', room_id=room.id) }}" class="btn btn-info btn-lg">View Room</a></p>
-      <p class="card-text"><a href="#" class="btn btn-primary m-1">Edit</a><a href="#" class="btn btn-danger m-1">Delete</a></p>
-    </div>
-  </div>
-{% endfor %}
+<ul class="list-group"></ul>
+    {% for plant in plants %}
+    <li class="list-group-item list-group-item-action list-group-item-success"><a href="/">{{ plant.name }}</a></li>
+    {% endfor %}
+</ul>
 
-<p><a href="/" class="btn btn-success btn-lg">Add a Plant</a></p>
+<p><a href="/" class="btn btn-success">Add a Plant</a></p>
+
+<div class="row bg-light">
+  <div class="col">
+    <a href="{{ url_for('view_collection', collection_id=room.collection_id) }}" class="btn btn-info btn-lg m-2">View Collection</a>
+  </div>
+  <div class="col">
+    <a href="{{ url_for('edit_room', room_id=room.id) }}" class="btn btn-primary btn-lg m-2">Edit Room</a>
+    </div>
+  <div class="col"> 
+    <form method="POST" action="{{ url_for('delete_room', room_id=room.id)}}"><button class="btn btn-danger btn-lg m-2">Delete Room</button></form>
+  </div>
+<div>
 
 {% endblock %}
