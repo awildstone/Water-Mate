@@ -1,6 +1,7 @@
-from flask_wtf import FlaskForm, QuerySelectMultipleField, QuerySelectField
+from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, TextAreaField, DecimalField, SelectField
-from wtforms.validators import InputRequired, Email, Length, EqualTo
+from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField, QuerySelectField
+from wtforms.validators import InputRequired, Email, Length, EqualTo, Required
 from models import LightType, PlantType
 from flask_wtf.file import FileField, FileAllowed
 
@@ -14,16 +15,15 @@ class LocationForm(FlaskForm):
 
     city = StringField('City', validators=[InputRequired(message='You must enter your city for an accurate location.')])
     state = StringField('State', validators=[InputRequired(message='You must enter your state for an accurate location.')])
-    zipcode = StringField('Zipcode (Optional)')
 
 class SignupForm(FlaskForm):
     """Form to sign up a new user."""
 
     name = StringField('Name', validators=[InputRequired(message='You must enter your name.')])
     email = StringField('E-mail', validators=[InputRequired(message='You must enter your email.'), Email(message='You must enter a valid email.')])
-    latitude = DecimalField('Latitude', validators=[InputRequired()])
-    longitude = DecimalField('Longitude', validators=[InputRequired()])
-    username = StringField('Name', validators=[InputRequired(message='You must enter a username.')])
+    # latitude = DecimalField('Latitude', places=6, validators=[InputRequired()])
+    # longitude = DecimalField('Longitude', places=6, validators=[InputRequired()])
+    username = StringField('Username', validators=[InputRequired(message='You must enter a username.')])
     password = PasswordField('Password', validators=[InputRequired(message='You must enter a password.'), Length(min=6, message='Your password must be greater than 6 characters.')])
 
 class LoginForm(FlaskForm):

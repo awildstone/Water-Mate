@@ -13,11 +13,15 @@
           <a class="navbar-brand text-light" href="/"><i class="fab fa-pagelines">Water Mate</i></a>
           <ul class="nav navbar-nav flex-row float-right">
             <li class="nav-item"><a class="nav-link pr-3 text-light" href="/about">About</a></li>
+            {% if session['current_user'] %}
             <li class="nav-item"><a class="nav-link pr-3 text-light" href="/">Dashboard</a></li>
             <li class="nav-item"><a class="nav-link pr-3 text-light" href="/">Collection</a></li>
             <li class="nav-item"><a class="nav-link pr-3 text-light" href="/logout">Logout</a></li>
+            {% endif %}
+            {% if not session['current_user'] %}
             <li class="nav-item"><a class="nav-link pr-3 text-light" href="/login">Login</a></li>
             <li class="nav-item"><a class="nav-link text-light" href="/signup">Signup</a></li>
+            {% endif %}
           </ul>
         </div>
       </nav>

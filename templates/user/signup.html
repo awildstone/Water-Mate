@@ -1,0 +1,24 @@
+{% extends 'base.html'  %}
+
+{% block title %} Signup Page 2 {% endblock %}
+
+{% block content %}
+
+<h1>Signup Page 2</h1>
+
+<p>Please enter your name, email, username, and password. All fields are required.</p>
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+    {% for field in form if field.widget.input_type != 'hidden' %}
+    <div class="mb-3">
+      {{ field.label }}
+      {{ field(class_="form-control") }}
+      {% for error in field.errors %}
+      <small class="form-text text-danger">{{ error }}</small>
+      {% endfor %}
+    </div>
+    {% endfor %}
+    <button class="btn btn-success" type="submit">Create Account</button>
+  </form>
+{% endblock %}

@@ -57,7 +57,7 @@ class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False)
-    email = db.Column(db.Text, unique=True, nullable=False)
+    email = db.Column(db.Text, nullable=False)
     latitude = db.Column(db.Numeric(8,6))
     longitude = db.Column(db.Numeric(9,6))
     username = db.Column(db.Text, unique=True, nullable=False)
@@ -75,10 +75,6 @@ class User(db.Model):
             "longitude": self.longitude
         }
     
-    #this should be handled in my signup route and just pass the lat & long into my signup method
-    # def generate_coordindates(self, city, state, zipcode):
-    #     """Generate the latitude and longitude coordindates with a user's city, state, zip."""
-    
     #If I have time, lets explore if having a @property for password and using @password.setter is a better method for hashing/storing passwords https://www.patricksoftwareblog.com/password-hashing/
 
     @classmethod
@@ -86,8 +82,7 @@ class User(db.Model):
         """Sign up a new user and hash the user password. 
         Return the new user with hashed password."""
         
-        salt = bcrypt.gensalt(rounds=12)
-        hashed_pwd = bcrypt.generate_password_hash(password, salt).decode('UTF-8')
+        hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
 
         new_user = User(
             name=name,
@@ -95,7 +90,7 @@ class User(db.Model):
             latitude=latitude,
             longitude=longitude,
             username=username,
-            pasword=hashed_pwd
+            password=hashed_pwd
         )
 
         db.session.add(new_user)
