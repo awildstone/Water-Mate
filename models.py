@@ -149,7 +149,7 @@ class LightSource(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     type_id = db.Column(db.Integer, db.ForeignKey('light_types.id'), nullable=False)
     daily_total = db.Column(db.Integer, nullable=False, default=8) #default is 8 for cases where artificial light source is used
-    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id', ondelete='cascade')) #delete if room is deleted
+    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id', ondelete='cascade')) #delete light source if room is deleted
 
     # plants = db.relationship('Plant', backref='light')
     
@@ -164,6 +164,7 @@ class LightSource(db.Model):
     # In the Southern Hemisphere, south is to the left. The Sun rises in the east (near arrow), culminates in the north (to the right) while moving to the left, and sets in the west (far arrow). Both rise and set positions are displaced towards the south in midsummer and the north in midwinter.
 
     #in both southern and northern hemisphere we can asume that east facing windows recieve the most light in the morning up until the midday, and then west facing windows recieve the most light from midday to evening and the temps will be hotter.
+    # Maximum eastern daylight exposure is Noon/Midday - local sunrise time. Maximum western daylight exposure is Noon/Midday - local sunset time.
 
 ####################
 # Plant Models
@@ -194,13 +195,19 @@ class Plant(db.Model):
     water_schedule = db.relationship('WaterSchedule', backref='plant')
     light = db.relationship('LightSource', backref='plant')
 
+####################
+# Schedule Models
+####################
+
 class WaterSchedule(db.Model):
     """A Water Schedule has a next water date, plant id and holds a water history."""
 
     __tablename__ = 'water_schedules'
 
     id = db.Column(db.Integer, primary_key=True)
-    next_date = db.Column(db.DateTime, nullable=False)
+    water_date = db.Column(db.DateTime, nullable=False)
+    water_interval = db.Column(db.Integer, nullable=False)
+    manual_mode = db.Column(db.Boolean, nullable=False, default=False)
     plant_id = db.Column(db.Integer, db.ForeignKey('plants.id', ondelete='cascade'), nullable=False) #if plant is deleted, delete schedule
 
     water_history = db.relationship('WaterHistory', backref='water_schedule')
@@ -215,4 +222,4 @@ class WaterHistory(db.Model):
     snooze = db.Column(db.Integer)
     notes = db.Column(db.String(200))
     plant_id = db.Column(db.Integer, db.ForeignKey('plants.id'), nullable=False)
-    water_schedule_id = db.Column(db.Integer, db.ForeignKey('water_schedules.id'), nullable=False)
+    water_schedule_id = db.Column(db.Integer, db.ForeignKey('water_schedules.id', ondelete='cascade'), nullable=False) #if water_schedule is deleted, delete history
