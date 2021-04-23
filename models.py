@@ -144,8 +144,10 @@ class LightSource(db.Model):
     """A LightSource has a type, daily total (hours of light), room id, and location id."""
 
     __tablename__ = 'light_sources'
+    __table_args__ = (db.UniqueConstraint('type_id', 'room_id'),)
 
     id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.Text, db.ForeignKey('light_types.type'), nullable=False)
     type_id = db.Column(db.Integer, db.ForeignKey('light_types.id'), nullable=False)
     daily_total = db.Column(db.Integer, nullable=False, default=8) #default is 8 for cases where artificial light source is used
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id', ondelete='cascade')) #delete light source if room is deleted

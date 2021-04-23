@@ -1,0 +1,28 @@
+{% extends 'base.html'  %}
+
+{% block title %} {{ plant.name }} {% endblock %}
+
+{% block content %}
+
+<h1>{{ plant.name }}</h1>
+
+<p>Here are the details about your plant:</p>
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+  <div class="col">
+    <div class="card h-100">
+      <img src="{{ plant.image }}" class="card-img-top" alt="plant">
+      <div class="card-body">
+        <h5 class="card-title">{{ plant.name }}</h5>
+        <p class="card-text">Collection: </p>
+        <p class="card-text">Room: </p>
+        <p class="card-text">Light Source: </p>
+        <p class="card-text">{{ plant.water_schedule}}</p>
+        <p class="card-text"><a href="#" class="btn btn-success m-2">View Schedule Details</a><a href="#" class="btn btn-warning m-2">Edit {{ plant.name }}</a></a><a href="#" class="btn btn-danger m-2">Delete {{ plant.name }}</a></p>
+      </div>
+      <div class="card-footer">
+        <small class="text-muted">Last watered {{ plant.water_schedule.water_date}}</small>
+      </div>
+    </div>
+  </div>
+</div>

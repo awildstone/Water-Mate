@@ -1,0 +1,18 @@
+{% extends 'base.html'  %}
+
+{% block title %} {{ lightsource.type }} Light {% endblock %}
+
+{% block content %}
+
+<h1>{{ lightsource.type }} Light</h1>
+<h4>Your {{ lightsource.type }} Light has the following plants using this light source:</h4>
+
+<ul class="list-group m-3">
+    {% for plant in plants %}
+    <li class="list-group-item list-group-item-secondary"><a href="{{ url_for('view_plant', plant_id=plant.id)}}">{{ plant.name }}</a></li>
+    {% endfor %}
+  </ul>
+
+<p><form method="POST" action="{{ url_for('delete_lightsource', lightsource_id=lightsource.id) }}"><button class="btn btn-danger m-2">Delete {{ lightsource.type }} Light</button></form></p>
+
+{% endblock %}

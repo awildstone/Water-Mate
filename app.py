@@ -44,6 +44,12 @@ def check_for_authed_user():
     else:
         g.user = None
 
+@app.teardown_request
+def teardown_request(exception):
+    if exception:
+        db.session.rollback()
+    db.session.remove()
+
 def auth_required(f):
     """This decorator function confirms the global g user is active before the request is processed."""
     @wraps(f)
@@ -125,9 +131,7 @@ def signup():
             flash('There was an error creating your account.', 'warning')
             return render_template('/user/signup.html', form=form)
         
-        #add the new user to session
         session[CURRENT_USER_KEY] = new_user.id
-        #remove the location variables from the session
         del session['location']
 
         flash(f'Welcome to Water Mate, {new_user.name}!', 'success')
@@ -145,7 +149,6 @@ def login():
         user = User.authenticate(username=form.username.data, password=form.password.data)
 
         if user:
-            #add the new user to session
             session[CURRENT_USER_KEY] = user.id
             flash(f'Welcome back, {user.name}!', 'success')
             return redirect(url_for('dashboard'))
@@ -184,6 +187,11 @@ def dashboard():
     plants = user.plants
 
     return render_template('/user/dashboard.html', user=user, plants=plants)
+
+#view user profile route
+#edit user profile route
+#edit user password route
+#delete user account route
 
 ####################
 # Collection Routes
@@ -224,10 +232,13 @@ def add_collection():
             name = form.name.data,
             user_id = g.user.id,
         )
-        g.user.collections.append(new_collection)
-        db.session.commit()
+        try:
+            g.user.collections.append(new_collection)
+            db.session.commit()
+            flash(f'New Collection, {new_collection.name} - added!', 'success')
+        except IntegrityError:
+            flash('Collection names must be unique.', 'warning')
 
-        flash(f'New Collection, {new_collection.name} - added!', 'success')
         return redirect(url_for('show_collections'))
 
     return render_template('/collection/add_collection.html', form=form)
@@ -238,15 +249,17 @@ def edit_collection(collection_id):
     """Edit a collection by id."""
 
     collection = Collection.query.get_or_404(collection_id)
-    owner = collection.user_id
 
     form = EditCollectionForm(obj=collection)
 
-    if g.user.id == owner:
+    if g.user.id == collection.user_id:
         if form.validate_on_submit():
-            collection.name = form.name.data
-            db.session.commit()
-            flash(f'{collection.name} updated!', 'success')
+            try:
+                collection.name = form.name.data
+                db.session.commit()
+                flash(f'{collection.name} updated!', 'success')
+            except IntegrityError:
+                flash('Collection names must be unique.', 'warning')
             return redirect(url_for('show_collections'))
     else:
         flash('Access Denied.', 'danger')
@@ -260,15 +273,13 @@ def delete_collection(collection_id):
     """Delete a collection by id."""
 
     collection = Collection.query.get_or_404(collection_id)
-    owner = collection.user_id
 
-    if g.user.id == owner:
+    if g.user.id == collection.user_id:
         try:
             db.session.delete(collection)
             db.session.commit()
             flash('Collection Deleted.', 'success')
         except IntegrityError:
-            db.session.rollback()
             flash('You cannot delete a collection that has rooms!', 'warning')
     else:
         flash('Access Denied.', 'danger')
@@ -289,9 +300,8 @@ def view_room(room_id):
     lightsources = room.lightsources
 
     collection = Collection.query.get_or_404(room.collection_id)
-    owner = collection.user_id
 
-    if owner != g.user.id:
+    if collection.user_id != g.user.id:
         flash('Access Denied.', 'danger')
         return redirect(url_for('show_collections'))
 
@@ -305,18 +315,21 @@ def add_room(collection_id):
     form = AddRoomForm()
 
     collection = Collection.query.get_or_404(collection_id)
-    owner = collection.user_id
 
-    if g.user.id == owner:
+    if g.user.id == collection.user_id:
         if form.validate_on_submit():
             new_room = Room(
                 name = form.name.data,
                 collection_id = collection_id
             )
-            collection.rooms.append(new_room)
-            db.session.commit()
+            try:
+                collection.rooms.append(new_room)
+                db.session.commit()
+                flash(f'New Room, {new_room.name} - added!', 'success')
+            except IntegrityError:
 
-            flash(f'New Room, {new_room.name} - added!', 'success')
+                flash('Room names must be unique.', 'warning')
+
             return redirect(url_for('view_collection', collection_id=collection_id))
 
     else:
@@ -325,7 +338,6 @@ def add_room(collection_id):
 
     return render_template('/room/add_room.html', form=form)
 
-#Route to edit a room
 @app.route('/collection/rooms/<int:room_id>/edit', methods=['GET', 'POST'])
 @auth_required
 def edit_room(room_id):
@@ -333,23 +345,25 @@ def edit_room(room_id):
 
     room = Room.query.get_or_404(room_id)
     collection = Collection.query.get_or_404(room.collection_id)
-    owner = collection.user_id
 
     form = EditRoomForm(obj=room)
 
-    if g.user.id == owner:
+    if g.user.id == collection.user_id:
         if form.validate_on_submit():
-            room.name = form.name.data
-            db.session.commit()
-            flash(f'{room.name} updated!', 'success')
-            return redirect(url_for('show_collections'))
+            try:
+                room.name = form.name.data
+                db.session.commit()
+                flash(f'{room.name} updated!', 'success')
+            except IntegrityError:
+                db.session.rollback() #For some reason my @app.teardown_request method isn't rolling back this session when it errors
+                flash('Room names must be unique.', 'warning')
+            return redirect(url_for('view_collection', collection_id=collection.id))
     else:
         flash('Access Denied.', 'danger')
-        return redirect(url_for('show_collections'))
+        return redirect(url_for('view_collection', collection_id=collection.id))
 
     return render_template('/room/edit_room.html', form=form, room=room)
 
-#Route to delete a room
 @app.route('/collection/rooms/<int:room_id>/delete', methods=['POST'])
 @auth_required
 def delete_room(room_id):
@@ -357,17 +371,122 @@ def delete_room(room_id):
 
     room = Room.query.get_or_404(room_id)
     collection = Collection.query.get_or_404(room.collection_id)
-    owner = collection.user_id
 
-    if g.user.id == owner:
+    if g.user.id == collection.user_id:
         try:
             db.session.delete(room)
             db.session.commit()
             flash('Room Deleted.', 'success')
         except IntegrityError:
-            db.session.rollback()
             flash('You cannot delete a room that has plants!', 'warning')
     else:
         flash('Access Denied.', 'danger')
 
     return redirect(url_for('view_collection', collection_id=collection.id))
+
+####################
+# Light Routes
+####################
+
+@app.route('/collection/rooms/<int:room_id>/add-light-source', methods=['GET', 'POST'])
+@auth_required
+def add_lightsource(room_id):
+    """Add one or multiple light sources to a room."""
+
+    form = AddLightSource()
+    room = Room.query.get_or_404(room_id)
+    collection = Collection.query.get_or_404(room.collection_id)
+
+    if g.user.id == collection.user_id:
+        if form.validate_on_submit():
+            try:
+                #types arrive as a list of ORM objects
+                light_types = form.light_type.data
+
+                for light in light_types:
+                    #we will set the daily_total to the default 8 hours for now.
+                    room.lightsources.append(LightSource(type=light.type, type_id=light.id, room_id=room_id))
+
+                db.session.commit()
+            except IntegrityError:
+                flash('You already added this lightsource to this room!', 'warning')
+
+            return redirect(url_for('view_room', room_id=room_id))
+    else:
+        flash('Access Denied.', 'danger')
+        return redirect(url_for('view_collection', collection_id=collection.id))
+
+    return render_template('/light/add_lightsource.html', form=form, room=room)
+
+@app.route('/collection/room/lightsource/<int:lightsource_id>')
+@auth_required
+def view_lightsource_plants(lightsource_id):
+    """View all of the plants that use this lightsource.
+    Helpful if a user wants to delete a lightsource from a room 
+    but needs to know which plants are assigned to this light."""
+
+    lightsource = LightSource.query.get_or_404(lightsource_id)
+    room = Room.query.get_or_404(lightsource.room_id)
+    collection = Collection.query.get_or_404(room.collection_id)
+    plants = lightsource.plant
+
+    if g.user.id == collection.user_id:
+        return render_template('/light/view_lightsource_plants.html', room=room, plants=plants, lightsource=lightsource)
+    else:
+        flash('Access Denied.', 'danger')
+        return redirect(url_for('view_collection', collection_id=collection.id))
+
+@app.route('/collection/room/lightsource/<int:lightsource_id>', methods=['POST'])
+@auth_required
+def delete_lightsource(lightsource_id):
+    """Delete a lightsource from a room by id. 
+    Lightsources that have plants using them cannot
+    be deleted."""
+
+    lightsource = LightSource.query.get_or_404(lightsource_id)
+    room = Room.query.get_or_404(lightsource.room_id)
+    collection = Collection.query.get_or_404(room.collection_id)
+
+    if g.user.id == collection.user_id:
+        try:
+            db.session.delete(lightsource)
+            db.session.commit()
+            flash(f'{lightsource.type} light was deleted from your {room.name}', 'success')
+        except IntegrityError:
+            flash('You cannot delete a lightsource that has plants using it! Change your plant lightsource first.', 'warning')
+        return redirect(url_for('view_room', room_id=room.id))
+    else:
+        flash('Access Denied.', 'danger')
+        return redirect(url_for('view_collection', collection_id=collection.id))
+
+####################
+# Plant Routes
+####################
+
+#view a plant (name, type, lightsource, location(room), water schedule, link to schedule history?)
+@app.route('/collection/room/plant/<int:plant_id>')
+@auth_required
+def view_plant(plant_id):
+    """View a plants details by plant id. From the plant view you can
+    edit plant details, view other details, or delete a plant."""
+
+    plant = Plant.query.get_or_404(plant_id)
+    room = Room.query.get_or_404(plant.room_id)
+    collection = Collection.query.get_or_404(room.collection_id)
+
+    if g.user.id == collection.user_id:
+        return render_template('/plant/view_plant.html', plant=plant)
+    else:
+        flash('Access Denied.', 'danger')
+        return redirect(url_for('view_collection', collection_id=collection.id))
+        
+#Add plant to room route
+#Edit plant details (lightsource, room location, name, type, etc.)
+#Delete plant from room route
+
+####################
+# Schedule Routes
+####################
+
+#View a plant's water schedule history
+#Manually edit a plant's water frequency

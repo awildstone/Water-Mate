@@ -7,19 +7,19 @@
 <h1>{{ room.name }}</h1>
 <h4>Your {{ room.name }} has the following light sources:</h4>
 
-<ul class="list-group">
+<ul class="list-group m-3">
     {% for light in lightsources %}
-    <li class="list-group-item list-group-item-action list-group-item-warning"><a href="/">{{ light.name }}</a></li>
+    <li class="list-group-item list-group-item-secondary"><a href="{{ url_for('view_lightsource_plants', lightsource_id=light.id) }}">{{ light.type }}</a></li>
     {% endfor %}
   </ul>
 
-<p><a href="/" class="btn btn-success">Add a Light Source</a></p>
+<p><a href="{{ url_for('add_lightsource', room_id=room.id) }}" class="btn btn-success">Add a Light Source</a></p>
 
 <h4>Your {{ room.name }} has the following plants:</h4>
 
-<ul class="list-group"></ul>
+<ul class="list-group m-3"></ul>
     {% for plant in plants %}
-    <li class="list-group-item list-group-item-action list-group-item-success"><a href="/">{{ plant.name }}</a></li>
+    <li class="list-group-item list-group-item-secondary"><a href="/">{{ plant.name }}</a></li>
     {% endfor %}
 </ul>
 
