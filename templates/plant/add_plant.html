@@ -1,0 +1,27 @@
+{% extends 'base.html'  %}
+
+{% block title %} Add a new Plant {% endblock %}
+
+{% block content %}
+
+<h1>Add a new Plant</h1>
+
+<p>Please use the form below to add a new plant to your {{ room.name }} (room).</p>
+<p>You are encouraged to upload an image of your plant to help keep track of which plant it is, but this is not required.</p>
+<p>Make sure that you use a descriptive name to identify your plant (this can be a nickname you gave it, or the specific species or common name of the plant.)</p>
+
+<form method="POST" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    {% for field in form if field.widget.input_type != 'hidden' %}
+    <div class="mb-3">
+      {{ field.label }}
+      {{ field(class_="form-control") }}
+      {% for error in field.errors %}
+      <small class="form-text text-danger">{{ error }}</small>
+      {% endfor %}
+    </div>
+    {% endfor %}
+    <button class="btn btn-success" type="submit">Add Plant</button>
+  </form>
+
+{% endblock %}

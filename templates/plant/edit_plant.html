@@ -1,0 +1,25 @@
+{% extends 'base.html'  %}
+
+{% block title %} Edit {{ plant.name }} {% endblock %}
+
+{% block content %}
+
+<h1>Edit {{ plant.name }}</h1>
+
+<p>Please enter the new details of your plant. All fields except for image upload are required.</p>
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+    {% for field in form if field.widget.input_type != 'hidden' %}
+    <div class="mb-3">
+      {{ field.label }}
+      {{ field(class_="form-control") }}
+      {% for error in field.errors %}
+      <small class="form-text text-danger">{{ error }}</small>
+      {% endfor %}
+    </div>
+    {% endfor %}
+    <a href="{{ url_for('view_room', room_id=room.id) }}" class="btn btn-secondary">Cancel</a>
+    <button class="btn btn-success" type="submit">Edit Plant</button>
+  </form>
+{% endblock %}

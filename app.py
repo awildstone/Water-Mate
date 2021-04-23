@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from functools import wraps
 from models import db, connect_db, Collection, Room, User, LightType, LightSource, PlantType, Plant, WaterSchedule, WaterHistory
 from forms import *
-from werkzeug.utils import secure_filename #use for add/edit plant route to upload the image https://flask-wtf.readthedocs.io/en/stable/form.html
+from werkzeug.utils import secure_filename
 from location import UserLocation
 
 CURRENT_USER_KEY = 'current_user'
@@ -54,7 +54,7 @@ def auth_required(f):
     """This decorator function confirms the global g user is active before the request is processed."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not g.user:
+        if not g.user and not None:
             flash('Access unauthorized.', 'danger')
             return redirect(url_for('homepage'))
         return f(*args, **kwargs)
@@ -204,7 +204,7 @@ def show_collections():
 
     collections = g.user.collections
 
-    return render_template('/collection/all_collections.html', collections=collections)
+    return render_template('/collection/view_collections.html', collections=collections)
 
 @app.route('/collections/<int:collection_id>')
 @auth_required
@@ -218,7 +218,7 @@ def view_collection(collection_id):
         flash('Access Denied.', 'danger')
         return redirect(url_for('show_collections'))
 
-    return render_template('/collection/collection.html', collection=collection, rooms=rooms)
+    return render_template('/collection/view_collection.html', collection=collection, rooms=rooms)
 
 @app.route('/collections/add-collection', methods=['GET', 'POST'])
 @auth_required
@@ -305,7 +305,7 @@ def view_room(room_id):
         flash('Access Denied.', 'danger')
         return redirect(url_for('show_collections'))
 
-    return render_template('/room/room.html', room=room, plants=plants, lightsources=lightsources)
+    return render_template('/room/view_room.html', room=room, plants=plants, lightsources=lightsources)
 
 @app.route('/collections/<int:collection_id>/add-room', methods=['GET', 'POST'])
 @auth_required
@@ -453,6 +453,7 @@ def delete_lightsource(lightsource_id):
             db.session.commit()
             flash(f'{lightsource.type} light was deleted from your {room.name}', 'success')
         except IntegrityError:
+            db.session.rollback()
             flash('You cannot delete a lightsource that has plants using it! Change your plant lightsource first.', 'warning')
         return redirect(url_for('view_room', room_id=room.id))
     else:
@@ -463,7 +464,6 @@ def delete_lightsource(lightsource_id):
 # Plant Routes
 ####################
 
-#view a plant (name, type, lightsource, location(room), water schedule, link to schedule history?)
 @app.route('/collection/room/plant/<int:plant_id>')
 @auth_required
 def view_plant(plant_id):
@@ -479,10 +479,108 @@ def view_plant(plant_id):
     else:
         flash('Access Denied.', 'danger')
         return redirect(url_for('view_collection', collection_id=collection.id))
-        
-#Add plant to room route
-#Edit plant details (lightsource, room location, name, type, etc.)
-#Delete plant from room route
+
+#Need to add logic when the plant is added to call a method to create the watering schedule
+#This will require some calculations to update many tables so I'll work on this once the basic routes are all completed.
+@app.route('/collection/rooms/<int:room_id>/add-plant', methods=['GET', 'POST'])
+@auth_required
+def add_plant(room_id):
+    """Add a new plant to a room by room id."""
+
+    form = AddPlantForm()
+    room = Room.query.get_or_404(room_id)
+    collection = Collection.query.get_or_404(room.collection_id)
+    #set the light_source query for the form
+    form.light_source.query = LightSource.query.filter_by(room_id=room.id).all()
+
+    if g.user.id == collection.user_id:
+        if form.validate_on_submit():
+            img = form.image.data
+            #securely validate image (if included)
+            if img:
+                filename = secure_filename(img.filename)
+                img.save(os.path.join(app.static_folder, 'img/plant', filename))
+
+                new_plant = Plant(
+                    name=form.name.data,
+                    image=f'/static/img/plant/{filename}',
+                    user_id=g.user.id,
+                    type_id=form.plant_type.data.id,
+                    room_id=room.id,
+                    light_id=form.light_source.data.id)
+            else:
+                new_plant = Plant(
+                    name=form.name.data,
+                    image=img,
+                    user_id=g.user.id,
+                    type_id=form.plant_type.data.id,
+                    room_id=room.id,
+                    light_id=form.light_source.data.id)
+
+            room.plants.append(new_plant)
+            db.session.commit()
+            flash(f'New plant, {new_plant.name}, added to {room.name}!', 'success')
+            return redirect(url_for('view_room', room_id=room.id))
+    else:
+        flash('Access Denied.', 'danger')
+        return redirect(url_for('view_collection', collection_id=collection.id))
+
+    return render_template('/plant/add_plant.html', form=form, room=room)
+
+@app.route('/collection/room/plant/<int:plant_id>/edit', methods=['GET', 'POST'])
+@auth_required
+def edit_plant(plant_id):
+    """Edit a plant by id."""
+
+    plant = Plant.query.get_or_404(plant_id)
+    form = EditPlantForm(obj=plant)
+    room = Room.query.get_or_404(plant.room_id)
+    collection = Collection.query.get_or_404(room.collection_id)
+    #set the light_source query for the form
+    form.light_source.query = LightSource.query.filter_by(room_id=room.id).all()
+
+    if g.user.id == collection.user_id:
+        if form.validate_on_submit():
+            img = form.image.data
+            #securely validate image (if included)
+            # if isinstance(img, FileField): #this isn't working
+            if not isinstance(img, str): #this isn't working
+                filename = secure_filename(img.filename)
+                img.save(os.path.join(app.static_folder, 'img/plant', filename))
+                plant.image = f'/static/img/plant/{filename}'
+            else:
+                plant.image = form.image.data
+            
+            plant.name = form.name.data
+            plant.type_id = form.plant_type.data.id
+            plant.light_id = form.light_source.data.id
+
+            db.session.commit()
+            flash(f'{plant.name} updated!', 'success')
+            return redirect(url_for('view_plant', plant_id=plant.id))
+    else:
+        flash('Access Denied.', 'danger')
+        return redirect(url_for('view_collection', collection_id=collection.id))
+
+    return render_template('/plant/edit_plant.html', form=form, plant=plant, room=room)
+
+@app.route('/collection/room/plant/<int:plant_id>/delete', methods=['POST'])
+@auth_required
+def delete_plant(plant_id):
+    """Delete a plant by id."""
+
+    plant = Plant.query.get_or_404(plant_id)
+    room = Room.query.get_or_404(plant.room_id)
+    collection = Collection.query.get_or_404(room.collection_id)
+
+    if g.user.id == collection.user_id:
+        db.session.delete(plant)
+        db.session.commit()
+        return redirect(url_for('view_room', room_id=room.id))
+    else:
+        flash('Access Denied.', 'danger')
+        return redirect(url_for('view_collection', collection_id=collection.id))
+
 
 ####################
 # Schedule Routes
