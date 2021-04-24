@@ -9,6 +9,7 @@ from models import db, connect_db, Collection, Room, User, LightType, LightSourc
 from forms import *
 from werkzeug.utils import secure_filename
 from location import UserLocation
+from datetime import datetime
 
 CURRENT_USER_KEY = 'current_user'
 
@@ -378,7 +379,9 @@ def delete_room(room_id):
             db.session.commit()
             flash('Room Deleted.', 'success')
         except IntegrityError:
+            db.session.rollback()
             flash('You cannot delete a room that has plants!', 'warning')
+            return redirect(url_for('view_room', room_id=room_id))
     else:
         flash('Access Denied.', 'danger')
 
@@ -480,8 +483,6 @@ def view_plant(plant_id):
         flash('Access Denied.', 'danger')
         return redirect(url_for('view_collection', collection_id=collection.id))
 
-#Need to add logic when the plant is added to call a method to create the watering schedule
-#This will require some calculations to update many tables so I'll work on this once the basic routes are all completed.
 @app.route('/collection/rooms/<int:room_id>/add-plant', methods=['GET', 'POST'])
 @auth_required
 def add_plant(room_id):
@@ -519,6 +520,8 @@ def add_plant(room_id):
 
             room.plants.append(new_plant)
             db.session.commit()
+
+            create_waterschedule(new_plant)
             flash(f'New plant, {new_plant.name}, added to {room.name}!', 'success')
             return redirect(url_for('view_room', room_id=room.id))
     else:
@@ -581,10 +584,65 @@ def delete_plant(plant_id):
         flash('Access Denied.', 'danger')
         return redirect(url_for('view_collection', collection_id=collection.id))
 
-
 ####################
 # Schedule Routes
 ####################
 
-#View a plant's water schedule history
-#Manually edit a plant's water frequency
+def create_waterschedule(plant):
+    """This is a helper method to create a Water Schedule for a newly added plant.
+    Accepts a plant ORM object, sets water_date to current datetime and water interval
+    is set from plant type base interval."""
+
+    plant_type = PlantType.query.get_or_404(plant.id)
+
+    new_waterschedule = WaterSchedule()
+    db.session.add(WaterSchedule(
+        water_date=datetime.now(),
+        water_interval=plant_type.base_water,
+        plant_id=plant.id
+    )) 
+    db.session.commit()
+
+@app.route('/collection/room/plant/<int:plant_id>/water-schedule')
+@auth_required
+def view_waterschedule(plant_id):
+    """View a plant's water schedule by plant id."""
+
+    plant = Plant.query.get_or_404(plant_id)
+    room = Room.query.get_or_404(plant.room_id)
+    collection = Collection.query.get_or_404(room.collection_id)
+
+    if g.user.id == collection.user_id:
+        water_schedule = WaterSchedule.query.filter_by(plant_id=plant_id).first()
+        return render_template('/schedule/view_waterschedule.html', water_schedule=water_schedule, plant=plant)
+    else:
+        flash('Access Denied.', 'danger')
+        return redirect(url_for('view_plant', plant_id=plant_id))
+
+@app.route('/collection/room/plant/<int:plant_id>/water-schedule/edit', methods=['GET', 'POST'])
+@auth_required
+def edit_waterschedule(plant_id):
+    """Edit a plant's water schedule by plant id. 
+    Editing a water schedule will toggle the plant's water schedule 
+    between manual mode or auto. If the schedule is set to manual 
+    intervals it will not adjust for seasonal changes."""
+
+    plant = Plant.query.get_or_404(plant_id)
+    room = Room.query.get_or_404(plant.room_id)
+    collection = Collection.query.get_or_404(room.collection_id)
+    water_schedule = WaterSchedule.query.filter_by(plant_id=plant_id).first()
+
+    form = EditWaterScheduleForm(obj=water_schedule)
+
+    if g.user.id == collection.user_id:
+        if form.validate_on_submit():
+            water_schedule.manual_mode = form.manual_mode.data
+            water_schedule.water_interval = form.water_interval.data
+            db.session.commit()
+            flash('Water Schedule updated.', 'success')
+            return redirect(url_for('view_waterschedule', plant_id=plant_id))
+    else:
+        flash('Access Denied.', 'danger')
+        return redirect(url_for('view_plant', plant_id=plant_id))
+    
+    return render_template('/schedule/edit_waterschedule.html', form=form, water_schedule=water_schedule, plant=plant)

@@ -130,24 +130,24 @@ class AddWaterHistoryNotes(FlaskForm):
 
 # I found this solution to create a custom validator that checks if another field has a truthy value before showing the 2nd field condition:
 # https://stackoverflow.com/questions/8463209/how-to-make-a-field-conditionally-optional-in-wtforms/44037077
+# class RequiredIf(Required):
+#     """A validator which makes a field required if
+#     another field is set and has a truthy value."""
 
-class RequiredIf(Required):
-    # a validator which makes a field required if
-    # another field is set and has a truthy value
+#     def __init__(self, other_field_name, *args, **kwargs,):
+#         self.other_field_name = other_field_name
+#         super(RequiredIf, self).__init__(*args, **kwargs)
 
-    def __init__(self, other_field_name, *args, **kwargs,):
-        self.other_field_name = other_field_name
-        super(RequiredIf, self).__init__(*args, **kwargs)
-
-    def __call__(self, form, field):
-        other_field = form._fields.get(self.other_field_name)
-        if other_field is None:
-            raise Exception('no field named "%s" in form' % self.other_field_name)
-        if bool(other_field.data):
-            super(RequiredIf, self).__call__(form, field)
+#     def __call__(self, form, field):
+#         other_field = form._fields.get(self.other_field_name)
+#         if other_field is None:
+#             raise Exception('no field named "%s" in form' % self.other_field_name)
+#         if bool(other_field.data):
+#             super(RequiredIf, self).__call__(form, field)
 
 class EditWaterScheduleForm(FlaskForm):
     """Form to manually set a Water Schedule timeline."""
 
     manual_mode = SelectField('Manual mode enabled?', choices=[(True, 'Yes'),(False, 'No')], coerce=bool, validators=[InputRequired(message='You must choose if manual mode is enabled.')])
-    water_interval = StringField('Watering Interval (in days)', validators=[RequiredIf('manual_mode')])
+    # water_interval = StringField('Watering Interval (in days)', validators=[RequiredIf('manual_mode')])
+    water_interval = StringField('Watering Interval (in days)', validators=[InputRequired(message='You must set the number of days between waterings if manual mode is enabled.')])

@@ -1,0 +1,29 @@
+{% extends 'base.html'  %}
+
+{% block title %}Edit Water Schedule For {{ plant.name }} {% endblock %}
+
+{% block content %}
+
+<h1>Edit Water Schedule For {{ plant.name }} </h1>
+
+<p>You can use this form to toggle the water schedule to manual or off manual mode, or simply change the number of days until the next water date.</p>
+
+<p>Toggling the plant watering schedule to manual will only remind you to water on the interval of days you specify below. It is reccomended not to toggle the schedule to manual if you want the schdule to adjust manually for seasonal changes. You can turn off manual mode at any time.</p>
+
+
+<form method="POST" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    {% for field in form if field.widget.input_type != 'hidden' %}
+    <div class="mb-3">
+      {{ field.label }}
+      {{ field(class_="form-control") }}
+      {% for error in field.errors %}
+      <small class="form-text text-danger">{{ error }}</small>
+      {% endfor %}
+    </div>
+    {% endfor %}
+    <a class="btn btn-secondary" href="{{ url_for('view_waterschedule', plant_id=plant.id)}}">Cancel</a>
+    <button class="btn btn-success" type="submit">Edit</button>
+  </form>
+
+{% endblock %}

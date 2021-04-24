@@ -1,0 +1,24 @@
+{% extends 'base.html'  %}
+
+{% block title %} Water Schedule For {{ plant.name }} {% endblock %}
+
+{% block content %}
+
+<h1>Water Schedule For {{ plant.name }}</h1>
+
+<p>Here are the details about your plant's watering schedule:</p>
+
+<div class="card mx-auto" style="width: 24rem;">
+  <img src="{{ plant.image }}" class="card-img-top" alt="{{ plant.name }}">
+    <div class="card-body">
+      <h5 class="card-title">Water Schedule For {{ plant.name }}</h5>
+      <p class="card-text">Last Watered: {{ water_schedule.get_water_date }}</p>
+      <p class="card-text">Watering Interval: Every {{ water_schedule.water_interval }} days</p>
+      <p class="card-text">Manual Mode enabled? {{ water_schedule.manual_mode }} </p>
+    <div class="card-footer">
+        <a href="{{ url_for('edit_waterschedule', plant_id=plant.id)}}" class="btn btn-warning m-2">Edit Water Schedule</a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -194,7 +194,7 @@ class Plant(db.Model):
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'), nullable=False)
     light_id = db.Column(db.Integer, db.ForeignKey('light_sources.id'), nullable=False)
 
-    water_schedule = db.relationship('WaterSchedule', backref='plant')
+    water_schedule = db.relationship('WaterSchedule', backref='plant', cascade="all, delete-orphan")
     light = db.relationship('LightSource', backref='plant')
 
 ####################
@@ -213,6 +213,13 @@ class WaterSchedule(db.Model):
     plant_id = db.Column(db.Integer, db.ForeignKey('plants.id', ondelete='cascade'), nullable=False) #if plant is deleted, delete schedule
 
     water_history = db.relationship('WaterHistory', backref='water_schedule')
+
+    @property
+    def get_water_date(self):
+        """Gets the current water_date and returns a string representation."""
+        return self.water_date.strftime("%m/%d/%Y, %H:%M:%S")
+
+    #create a class method that changes the water interval?
 
 class WaterHistory(db.Model):
     """A Water History has a water date, snooze amount, notes, and a plant and water schedule id."""
