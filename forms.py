@@ -66,7 +66,7 @@ class AddPlantForm(FlaskForm):
     name = StringField('Plant Name', validators=[InputRequired(message='You must enter a name for your plant.')])
     image = FileField('Plant Image (Optional)', validators=[FileAllowed(['jpg', 'png', 'jpeg'], '.jpg, .png, or .jpeg images only!')])
     plant_type = QuerySelectField('Plant Type', query_factory=plant_types, get_label='name', allow_blank=True, blank_text='Select the type for your plant.') #this will return the planttype ORM object
-    light_source = QuerySelectField('Light Source Type', get_label='type') #need to explicitly pass the query for this Room's light sources from the route view https://wtforms.readthedocs.io/en/2.3.x/ext/
+    light_source = QuerySelectField('Light Source Type', get_label='type', allow_blank=True, blank_text='Select the light your plant uses.') #need to explicitly pass the query for this Room's light sources from the route view https://wtforms.readthedocs.io/en/2.3.x/ext/
 
 ####################
 # Edit User
@@ -115,8 +115,8 @@ class EditPlantForm(FlaskForm):
 
     name = StringField('Plant Name', validators=[InputRequired(message='You must enter a name for your plant.')])
     image = FileField('Plant Image (Optional)', validators=[FileAllowed(['jpg', 'png', 'jpeg'], '.jpg, .png, or .jpeg images only!')])
-    plant_type = QuerySelectField(query_factory=plant_types, get_label='name', allow_blank=True, blank_text='Select the type for your plant.') #this will return the planttype ORM object
-    light_source = QuerySelectField(get_label='type') #need to explicitly pass the query for this Room's light sources from the route view https://wtforms.readthedocs.io/en/2.3.x/ext/
+    plant_type = QuerySelectField(query_factory=plant_types, get_label='name', allow_blank=True, blank_text='Select the type for your plant.', validators=[InputRequired(message='You must enter a plant type!.')])
+    light_source = QuerySelectField(get_label='type', allow_blank=True, blank_text='Select the light your plant uses.', validators=[InputRequired(message='You must enter a light source!')])
 
 ####################
 # Schedule

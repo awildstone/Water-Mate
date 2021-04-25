@@ -337,7 +337,7 @@ def add_room(collection_id):
         flash('Access Denied.', 'danger')
         return redirect(url_for('show_collections'))
 
-    return render_template('/room/add_room.html', form=form)
+    return render_template('/room/add_room.html', form=form, collection_id=collection_id)
 
 @app.route('/collection/rooms/<int:room_id>/edit', methods=['GET', 'POST'])
 @auth_required
@@ -544,15 +544,13 @@ def edit_plant(plant_id):
 
     if g.user.id == collection.user_id:
         if form.validate_on_submit():
-            img = form.image.data
             #securely validate image (if included)
-            # if isinstance(img, FileField): #this isn't working
-            if not isinstance(img, str): #this isn't working
+            img = form.image.data
+            if img != plant.image:
+                print(form.image)
                 filename = secure_filename(img.filename)
                 img.save(os.path.join(app.static_folder, 'img/plant', filename))
                 plant.image = f'/static/img/plant/{filename}'
-            else:
-                plant.image = form.image.data
             
             plant.name = form.name.data
             plant.type_id = form.plant_type.data.id

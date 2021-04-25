@@ -21,6 +21,7 @@
       {% endfor %}
     </div>
     {% endfor %}
+    <a href="{{ url_for('view_room', room_id=room.id) }}" class="btn btn-secondary">Cancel</a>
     <button class="btn btn-success" type="submit">Add Plant</button>
   </form>
 

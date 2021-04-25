@@ -72,6 +72,7 @@ class User(db.Model):
     def __repr__(self):
         return f'<User #{self.id}: {self.username}, {self.email}>'
     
+    @property
     def get_coordinates(self):
         """Get and return this user's coordinates."""
         return {
