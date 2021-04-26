@@ -13,7 +13,11 @@
 {% for plant in plants %}
   <div class="col">
     <div class="card h-100">
-      <img src="{{ plant.image }}" class="card-img-top" alt="plant">
+      {% if 'succulents.png' not in plant.image %}
+        <img src="{{ url_for('download_file', filename=plant.image) }}" class="card-img-top" alt="{{ plant.name }}">
+      {% else %}
+        <img src="{{ plant.image }}" class="card-img-top" alt="{{ plant.name }}">
+      {% endif %}
       <div class="card-body">
         <h5 class="card-title">{{ plant.name }}</h5>
         <p class="card-text">{{ plant.water_schedule}}</p>

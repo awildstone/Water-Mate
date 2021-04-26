@@ -9,7 +9,11 @@
 <p>Here are the details about your plant:</p>
 
 <div class="card mx-auto" style="width: 24rem;">
+  {% if 'succulents.png' not in plant.image %}
+  <img src="{{ url_for('download_file', filename=plant.image) }}" class="card-img-top" alt="{{ plant.name }}">
+  {% else %}
   <img src="{{ plant.image }}" class="card-img-top" alt="{{ plant.name }}">
+  {% endif %}
     <div class="card-body">
       <h5 class="card-title">{{ plant.name }}</h5>
       <p class="card-text">Collection: {{ plant.room.collection.name }}</p>

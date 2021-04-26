@@ -1,7 +1,7 @@
 """Flask App for Water Mate."""
 
 import os
-from flask import Flask, render_template, request, flash, redirect, session, g, url_for
+from flask import Flask, render_template, request, flash, redirect, session, g, url_for, send_from_directory
 from flask_debugtoolbar import DebugToolbarExtension #keep only for development
 from sqlalchemy.exc import IntegrityError
 from functools import wraps
@@ -12,6 +12,8 @@ from location import UserLocation
 from datetime import datetime
 
 CURRENT_USER_KEY = 'current_user'
+# UPLOAD_FOLDER = '.static/img/user'
+UPLOAD_FOLDER = 'uploads/user'
 
 app = Flask(__name__)
 
@@ -26,6 +28,7 @@ app.config['SQLALCHEMY_ECHO'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'J28r$CC&Z5NCN48O$CEe&749k')
 #Disables Flask file caching
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 toolbar = DebugToolbarExtension(app) # for development only
 
 connect_db(app)
@@ -132,6 +135,8 @@ def signup():
             flash('There was an error creating your account.', 'warning')
             return render_template('/user/signup.html', form=form)
         
+        #create an uploads file directory for this user
+        os.makedirs(f'{UPLOAD_FOLDER}/{new_user.id}')
         session[CURRENT_USER_KEY] = new_user.id
         del session['location']
 
@@ -483,6 +488,10 @@ def view_plant(plant_id):
         flash('Access Denied.', 'danger')
         return redirect(url_for('view_collection', collection_id=collection.id))
 
+@app.route('/uploads/user/<path:filename>')
+def download_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+
 @app.route('/collection/rooms/<int:room_id>/add-plant', methods=['GET', 'POST'])
 @auth_required
 def add_plant(room_id):
@@ -500,11 +509,13 @@ def add_plant(room_id):
             #securely validate image (if included)
             if img:
                 filename = secure_filename(img.filename)
-                img.save(os.path.join(app.static_folder, 'img/plant', filename))
+                # img.save(os.path.join(app.static_folder, 'img/plant', filename))
+                img.save(os.path.join(f'{UPLOAD_FOLDER}/{g.user.id}', filename))
 
                 new_plant = Plant(
                     name=form.name.data,
-                    image=f'/static/img/plant/{filename}',
+                    # image=f'/static/img/plant/{filename}',
+                    image = f'{g.user.id}/{filename}',
                     user_id=g.user.id,
                     type_id=form.plant_type.data.id,
                     room_id=room.id,
@@ -549,8 +560,10 @@ def edit_plant(plant_id):
             if img != plant.image:
                 print(form.image)
                 filename = secure_filename(img.filename)
-                img.save(os.path.join(app.static_folder, 'img/plant', filename))
-                plant.image = f'/static/img/plant/{filename}'
+                # img.save(os.path.join(app.static_folder, 'img/plant', filename))
+                img.save(os.path.join(f'{UPLOAD_FOLDER}/{g.user.id}', filename))
+                # plant.image = f'/static/img/plant/{filename}'
+                plant.image = f'{g.user.id}/{filename}'
             
             plant.name = form.name.data
             plant.type_id = form.plant_type.data.id
