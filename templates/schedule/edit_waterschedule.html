@@ -13,7 +13,25 @@
 
 <form method="POST" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
-    {% for field in form if field.widget.input_type != 'hidden' %}
+    <div class="mb-3">
+      {{ form.manual_mode.label(class_="form-lable")}}
+      {{ form.manual_mode }}
+      {% for error in form.manual_mode.errors %}
+      <small class="form-text text-danger">
+          {{ error }}
+      </small>
+      {% endfor %}
+    </div>
+    <div class="mb-3">
+      {{ form.water_interval.label(class_="form-lable")}}
+      {{ form.water_interval }}
+      {% for error in form.water_interval.errors %}
+      <small class="form-text text-danger">
+          {{ error }}
+      </small>
+      {% endfor %}
+    </div>
+    <!-- {% for field in form if field.widget.input_type != 'hidden' %}
     <div class="mb-3">
       {{ field.label }}
       {{ field(class_="form-control") }}
@@ -21,7 +39,7 @@
       <small class="form-text text-danger">{{ error }}</small>
       {% endfor %}
     </div>
-    {% endfor %}
+    {% endfor %} -->
     <a class="btn btn-secondary" href="{{ url_for('view_waterschedule', plant_id=plant.id)}}">Cancel</a>
     <button class="btn btn-success" type="submit">Edit</button>
   </form>

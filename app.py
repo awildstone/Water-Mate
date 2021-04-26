@@ -9,7 +9,7 @@ from models import db, connect_db, Collection, Room, User, LightType, LightSourc
 from forms import *
 from werkzeug.utils import secure_filename
 from location import UserLocation
-from datetime import datetime
+from datetime import datetime, timedelta
 
 CURRENT_USER_KEY = 'current_user'
 # UPLOAD_FOLDER = '.static/img/user'
@@ -101,14 +101,14 @@ def get_location():
 
     if form.validate_on_submit():
 
-        user_location = UserLocation(city=form.city.data, state=form.state.data)
+        user_location = UserLocation(city=form.city.data, state=form.state.data, country=form.country.data)
         coordinates = user_location.get_coordinates()
 
         if coordinates:
             session['location'] = coordinates
             return redirect(url_for('signup'))
         else:
-            flash('There was an error fetching your geolocation, please try again.', 'warning')
+            flash('There was an error fetching your geolocation. Please check the spelling of your City or State/Country and try again.', 'warning')
 
     return render_template('/user/location.html', form=form)
 
@@ -509,12 +509,10 @@ def add_plant(room_id):
             #securely validate image (if included)
             if img:
                 filename = secure_filename(img.filename)
-                # img.save(os.path.join(app.static_folder, 'img/plant', filename))
                 img.save(os.path.join(f'{UPLOAD_FOLDER}/{g.user.id}', filename))
 
                 new_plant = Plant(
                     name=form.name.data,
-                    # image=f'/static/img/plant/{filename}',
                     image = f'{g.user.id}/{filename}',
                     user_id=g.user.id,
                     type_id=form.plant_type.data.id,
@@ -560,9 +558,7 @@ def edit_plant(plant_id):
             if img != plant.image:
                 print(form.image)
                 filename = secure_filename(img.filename)
-                # img.save(os.path.join(app.static_folder, 'img/plant', filename))
                 img.save(os.path.join(f'{UPLOAD_FOLDER}/{g.user.id}', filename))
-                # plant.image = f'/static/img/plant/{filename}'
                 plant.image = f'{g.user.id}/{filename}'
             
             plant.name = form.name.data
@@ -609,9 +605,10 @@ def create_waterschedule(plant):
     new_waterschedule = WaterSchedule()
     db.session.add(WaterSchedule(
         water_date=datetime.now(),
+        next_water_date=datetime.now() + timedelta(days=plant_type.base_water), #set the initial next water date based on current date + base plant_type water interval 
         water_interval=plant_type.base_water,
         plant_id=plant.id
-    )) 
+    ))
     db.session.commit()
 
 @app.route('/collection/room/plant/<int:plant_id>/water-schedule')

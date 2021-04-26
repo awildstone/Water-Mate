@@ -28,7 +28,7 @@ class Collection(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='cascade')) #delete if user is deleted
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='cascade'))
 
     rooms = db.relationship('Room', backref='collection')
 
@@ -41,8 +41,7 @@ class Room(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False)
-    collection_id = db.Column(db.Integer, db.ForeignKey('collections.id', ondelete='cascade'), nullable=False) #nullable=False should raise an Integrity error if we try to delete a collection that contains rooms.
-
+    collection_id = db.Column(db.Integer, db.ForeignKey('collections.id', ondelete='cascade'), nullable=False)
     plants = db.relationship('Plant', backref='room')
     lightsources = db.relationship('LightSource', backref='room')
 
@@ -209,6 +208,7 @@ class WaterSchedule(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     water_date = db.Column(db.DateTime, nullable=False)
+    next_water_date = db.Column(db.DateTime, nullable=False)
     water_interval = db.Column(db.Integer, nullable=False)
     manual_mode = db.Column(db.Boolean, nullable=False, default=False)
     plant_id = db.Column(db.Integer, db.ForeignKey('plants.id', ondelete='cascade'), nullable=False) #if plant is deleted, delete schedule
