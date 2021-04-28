@@ -150,14 +150,14 @@ class SolarCalculator:
             
         return plant_max_daily_light
 
-# test = SolarCalculator(user_location={"latitude": "47.466748", "longitude": "-122.34722"}, current_date=datetime.today(), water_interval=10, light_type="North")
+test = SolarCalculator(user_location={"latitude": "47.466748", "longitude": "-122.34722"}, current_date=datetime.today(), water_interval=7, light_type="South")
 
-# test2 = SolarCalculator(user_location={"latitude": "-33.854816", "longitude": "151.216454"}, current_date=datetime.today(), water_interval=7, light_type="South")
+test2 = SolarCalculator(user_location={"latitude": "-33.854816", "longitude": "151.216454"}, current_date=datetime.today(), water_interval=7, light_type="South")
 
-# light_forcast = test.get_daily_sunlight()
+light_forcast = test.get_daily_sunlight()
 
-# print('################# LIGHT FORCAST BURIEN WA #################')
-# print(light_forcast)
+print('################# LIGHT FORCAST BURIEN WA #################')
+print(light_forcast)
 
 
 # light_forcast2 = test2.get_daily_sunlight()

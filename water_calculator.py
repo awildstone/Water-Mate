@@ -15,7 +15,11 @@ class WaterCalculator:
         self.light_forcast = self.get_light_forcast()
     
     def get_light_forcast(self):
-        """Get the light forcast from the solar calculator."""
+        """Get the light forcast from the solar calculator.
+        Uses the user's location, current date, water interval (days between water frequency),
+        and the light type to calculate the maximum light potential for each day.
+        
+        If the light forcast fails to populate raise an error."""
 
         calculator = SolarCalculator(
             user_location=self.user.get_coordinates,
@@ -33,11 +37,21 @@ class WaterCalculator:
 
     def calculate_next_water_date(self):
         """Calculates the water_interval and next_water_date using data from the plant type's base_water (days between water frequency), 
-        plant type's base_sunlight (optium daily sunlight requirements), and the user location solar schedule.
+        plant type's base_sunlight (optium daily sunlight requirements), and the calculated light forcast.
         
-        In addition, we will look at the plant's light source and user latitude to calculate the maximum
-        light potential the plant can recieve. Users in the northern hemisphere will have positive latitudes and users in the southern
-        hemisphere will use negative latitudes.
-        
-        The plant -> water_schedule -> water_interval will adjust based on how how much or how little light a plant is recieving each day compared to the plant type's -> base_sunlight requirements to thrive. Less sunlight will increase the frequency length between waterings, more sunlight will decrease the frequency length between waterings (water_interval)."""
+        The plant's water_schedule -> water_interval will adjust based on how how much or how little light a plant is recieving each day compared to the plant type's base_sunlight requirements to thrive. Less light will increase the frequency length between waterings, more sunlight will decrease the frequency length between waterings (water_interval)."""
+
+        #base_water is the number of days between watering for this type of plant under optimal conditions
+        base_water = self.plant_type.base_water
+        #base_light is the optimal daily amount of sunlight for this type of plant
+        base_light = self.plant_type.base_sunlight
+
+
+        for time in self.light_forcast:
+            #convert the timedelta to datetime.time()? add all of the times up and divide by number of days to get average light per day.
+
+            #compare the avg light_forcast with the plant type base_light
+
+            #if the avg light_forcast is higher than the base_light requirement, decrease water interval 1 day or more
+            #if the avg light_forcast is lower than the base_light requirement, increase water interval 1 day or more
 
