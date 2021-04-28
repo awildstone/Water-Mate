@@ -12,7 +12,6 @@ from location import UserLocation
 from datetime import datetime, timedelta
 
 CURRENT_USER_KEY = 'current_user'
-# UPLOAD_FOLDER = '.static/img/user'
 UPLOAD_FOLDER = 'uploads/user'
 
 app = Flask(__name__)
@@ -26,8 +25,7 @@ app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False # for development only
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'J28r$CC&Z5NCN48O$CEe&749k')
-#Disables Flask file caching
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0 #Disables Flask file caching
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 toolbar = DebugToolbarExtension(app) # for development only
 
@@ -137,7 +135,9 @@ def signup():
         
         #create an uploads file directory for this user
         os.makedirs(f'{UPLOAD_FOLDER}/{new_user.id}')
+        #add the new user to session
         session[CURRENT_USER_KEY] = new_user.id
+        #remove the location from the session, this is stored in the user table now.
         del session['location']
 
         flash(f'Welcome to Water Mate, {new_user.name}!', 'success')
@@ -600,12 +600,12 @@ def create_waterschedule(plant):
     Accepts a plant ORM object, sets water_date to current datetime and water interval
     is set from plant type base interval."""
 
-    plant_type = PlantType.query.get_or_404(plant.id)
+    plant_type = PlantType.query.get_or_404(plant.type_id)
 
     new_waterschedule = WaterSchedule()
     db.session.add(WaterSchedule(
-        water_date=datetime.now(),
-        next_water_date=datetime.now() + timedelta(days=plant_type.base_water), #set the initial next water date based on current date + base plant_type water interval 
+        water_date=datetime.today(),
+        next_water_date=datetime.today() + timedelta(days=plant_type.base_water), #set the initial next water date based on current date + base plant_type water interval 
         water_interval=plant_type.base_water,
         plant_id=plant.id
     ))
