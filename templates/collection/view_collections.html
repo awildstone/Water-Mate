@@ -5,12 +5,11 @@
 {% block content %}
 
 <h1>Collections</h1>
-<p>Your houseplant collections.</p>
 
+{% if collections %}
+<p>Your houseplant collections:</p>
 
-<!-- <div class="row mx-auto"> -->
   {% for collection in collections %}
-  <!-- <div class="col-sm-6"> -->
     <div class="card mx-auto bg-light m-2" style="width: 24rem;">
       <div class="card-body">
         <h2 class="card-title">{{ collection.name }}</h2>
@@ -25,10 +24,13 @@
         </div>
       </div>
     </div>
-  <!-- </div> -->
   {% endfor %}
-<!-- </div> -->
 
 <p><a href="{{ url_for('add_collection') }}" class="btn btn-success btn-lg">Add a Collection</a></p>
+{% else %}
+<h4>You don't have any collections yet! Add your first collection.</h4>
+
+<p><a href="{{ url_for('add_collection') }}" class="btn btn-success btn-lg">Add a Collection</a></p>
+{% endif %}
 
 {% endblock %}

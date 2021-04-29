@@ -31,16 +31,7 @@
       </small>
       {% endfor %}
     </div>
-    <!-- {% for field in form if field.widget.input_type != 'hidden' %}
-    <div class="mb-3">
-      {{ field.label }}
-      {{ field(class_="form-control") }}
-      {% for error in field.errors %}
-      <small class="form-text text-danger">{{ error }}</small>
-      {% endfor %}
-    </div>
-    {% endfor %} -->
-    <a class="btn btn-secondary" href="{{ url_for('view_waterschedule', plant_id=plant.id)}}">Cancel</a>
+    <a class="btn btn-secondary" href="{{ url_for('view_plant', plant_id=plant.id) }}">Cancel</a>
     <button class="btn btn-success" type="submit">Edit</button>
   </form>
 

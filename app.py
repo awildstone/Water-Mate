@@ -480,12 +480,13 @@ def view_plant(plant_id):
 
     plant = Plant.query.get_or_404(plant_id)
     owner = plant.room.collection.user_id
+    water_schedule = WaterSchedule.query.filter_by(plant_id=plant_id).first()
     # room = Room.query.get_or_404(plant.room_id)
     # collection = Collection.query.get_or_404(room.collection_id)
     # collection_id = plant.room.collection_id
 
     if g.user.id == owner:
-        return render_template('/plant/view_plant.html', plant=plant)
+        return render_template('/plant/view_plant.html', plant=plant, water_schedule=water_schedule)
     else:
         collection_id = plant.room.collection_id
         flash('Access Denied.', 'danger')
@@ -615,21 +616,21 @@ def create_waterschedule(plant):
     db.session.commit()
 
 # I might remove this route and add water schedule details to the plant view. This route could also potentially become a route for my client side to send a POST request to trigger the solar calculator and water calculator to create a forcast and update the plant's water schedule details (and the water history table).
-@app.route('/collection/room/plant/<int:plant_id>/water-schedule') 
-@auth_required
-def view_waterschedule(plant_id):
-    """View a plant's water schedule by plant id."""
+# @app.route('/collection/room/plant/<int:plant_id>/water-schedule') 
+# @auth_required
+# def view_waterschedule(plant_id):
+#     """View a plant's water schedule by plant id."""
 
-    plant = Plant.query.get_or_404(plant_id)
-    room = Room.query.get_or_404(plant.room_id)
-    collection = Collection.query.get_or_404(room.collection_id)
+#     plant = Plant.query.get_or_404(plant_id)
+#     room = Room.query.get_or_404(plant.room_id)
+#     collection = Collection.query.get_or_404(room.collection_id)
 
-    if g.user.id == collection.user_id:
-        water_schedule = WaterSchedule.query.filter_by(plant_id=plant_id).first()
-        return render_template('/schedule/view_waterschedule.html', water_schedule=water_schedule, plant=plant)
-    else:
-        flash('Access Denied.', 'danger')
-        return redirect(url_for('view_plant', plant_id=plant_id))
+#     if g.user.id == collection.user_id:
+#         water_schedule = WaterSchedule.query.filter_by(plant_id=plant_id).first()
+#         return render_template('/schedule/view_waterschedule.html', water_schedule=water_schedule, plant=plant)
+#     else:
+#         flash('Access Denied.', 'danger')
+#         return redirect(url_for('view_plant', plant_id=plant_id))
 
 @app.route('/collection/room/plant/<int:plant_id>/water-schedule/edit', methods=['GET', 'POST'])
 @auth_required
@@ -652,7 +653,7 @@ def edit_waterschedule(plant_id):
             water_schedule.water_interval = form.water_interval.data
             db.session.commit()
             flash('Water Schedule updated.', 'success')
-            return redirect(url_for('view_waterschedule', plant_id=plant_id))
+            return redirect(url_for('view_plant', plant_id=plant_id))
     else:
         flash('Access Denied.', 'danger')
         return redirect(url_for('view_plant', plant_id=plant_id))

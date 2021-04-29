@@ -153,19 +153,6 @@ class LightSource(db.Model):
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id', ondelete='cascade')) #delete light source if room is deleted
 
     # plants = db.relationship('Plant', backref='light')
-    
-    #daily total needs to be calculated from the g user's location & light type. get the location data from g user class to calculate daily total light for the relative location on earth. Adjust daily potential based off the conditions below for the type of light:
-
-    #https://sciencepickle.com/earth-systems/coordinate-system/
-    #Latitudes have positive and negative values. Northern Hemisphere latitudes are positive, and negative latitudes occur in the Southern Hemisphere
-    #Northern hemisphere has lowsunlight in northern windows, while southern hemisphere has the most sunlight from northern windows.
-    #In the Northern Hemisphere, north is to the left. The Sun rises in the east (far arrow), culminates in the south (to the right) while moving to the right, and sets in the west (near arrow). Both rise and set positions are displaced towards the north in midsummer and the south in midwinter.
-    
-    #Longitudes have positive and negative values. Positive longitudes are in the Eastern Hemisphere (east of the Prime Meridian), and negative occur in the Western Hemisphere (west of 0º).
-    # In the Southern Hemisphere, south is to the left. The Sun rises in the east (near arrow), culminates in the north (to the right) while moving to the left, and sets in the west (far arrow). Both rise and set positions are displaced towards the south in midsummer and the north in midwinter.
-
-    #in both southern and northern hemisphere we can asume that east facing windows recieve the most light in the morning up until the midday, and then west facing windows recieve the most light from midday to evening and the temps will be hotter.
-    # Maximum eastern daylight exposure is Noon/Midday - local sunrise time. Maximum western daylight exposure is Noon/Midday - local sunset time.
 
 ####################
 # Plant Models
