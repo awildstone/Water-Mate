@@ -36,23 +36,20 @@ class SolarCalculator:
 
     def convert_UTC__to_localtime(self, date, time):
         """Builds a UTC datetime object then converts UTC time to local time. 
-        Returns localtime datetime object."""
-
-        #https://stackoverflow.com/questions/4770297/convert-utc-datetime-string-to-local-datetime
+        Returns localtime datetime object.
+        Found solution on https://stackoverflow.com/questions/4770297/convert-utc-datetime-string-to-local-datetime ."""
 
         from_zone = tz.tzutc()
         to_zone = tz.tzlocal()
 
         #build a utc formatted string from API response string
         utc_date_time_str = date.strftime('%Y-%m-%d') + ' ' + time[:-3]
+        #parse string into datetime obj
         utc = datetime.strptime(utc_date_time_str, '%Y-%m-%d %H:%M:%S')
-        # print('################ UTC STRING ################')
-        # print(utc)
-
+        #set timezone to UTC
         utc = utc.replace(tzinfo=from_zone)
+        #update timezone/time to localtime
         local = utc.astimezone(to_zone)
-        # print('################ LOCAL CONVERSION ################')
-        # print(local)
 
         return local
 
@@ -67,8 +64,6 @@ class SolarCalculator:
             'date': day})
         
         results = response.json()['results']
-        # print('################ RAW DATA ################')
-        # print(results)
         
         if response.json()['status'] == 'OK':
             return {'date': day, 
@@ -84,9 +79,6 @@ class SolarCalculator:
         solar_schedule = []
         dates = self.generate_dates(self.current_date, self.water_interval)
 
-        # print('################ GENERATED DATES ################')
-        # print(dates)
-
         for day in dates:
             data = self.get_data(day)
             solar_schedule.append(data)
@@ -98,34 +90,18 @@ class SolarCalculator:
         """ Accepts time (total daily hours), and a fraction that represents the fraction of total time we need. 
         Converts time into a duration of time then gets the fraction of that time.
 
-        Returns the fraction of the duration of time.
-        
-        This calculation is used to calculate the total amount of light in Northeastern/NorthWestern (Northern Hemisphere) exposure or Southeastern/Southwestern (Southern Hemisphere) exposure."""
+        Returns the fraction of the duration of time."""
 
         duration_of_time = datetime.combine(date.min, time) - datetime.min
         fraction_of__total_time = duration_of_time * fraction
 
         return fraction_of__total_time
 
-    # Calculation to convert point in time to duration found on https://stackoverflow.com/questions/35241643/convert-datetime-time-into-datetime-timedelta-in-python-3-4
-    # def get_datetime_fraction(self, time, fraction):
-    #     """ Accepts time (total daily hours), and a fraction that represents the fraction of time we need to subtract from the total daily hours. 
-    #     Converts the time into a duration of time then gets the fraction of that time.
-    #     Returns the total time - fraction of time.
-        
-    #     This calculation is used to calculate the total amount of light in a Southern (Northern Hemisphere) exposure or Northern (Southern Hemisphere) exposure."""
-
-    #     duration_of_time = datetime.combine(date.min, time) - datetime.min
-    #     fraction_of__total_time_removed = duration_of_time - (duration_of_time * fraction)
-
-    #     return fraction_of__total_time_removed
-
     def get_daily_sunlight(self):
         """Calculates the maximum amount of light that a light_type can recieve given the user location, the date, and the type of light source. Uses data from the solar forecast to calculate the maximum sunlight potential for each day.
         Returns a list of time deltas that equal the maximum potential sunlight for each day."""
 
         solar_forcast = self.get_solar_schedule()
-        # print(solar_forcast)
         
         solar_noon_times = [date['solar_noon'] for date in solar_forcast]
         sunrise_times = [date['sunrise'] for date in solar_forcast]
@@ -177,8 +153,8 @@ def convert_time_delta_float(time_delta):
     return (microseconds / 1000000 + seconds / 60) / 60
 
 
-# test = SolarCalculator(user_location={"latitude": "47.466748", "longitude": "-122.34722"}, current_date=datetime.today(), water_interval=10, light_type="West")
-test = SolarCalculator(user_location={"latitude": "47.466748", "longitude": "-122.34722"}, current_date=datetime(2021, 11, 1), water_interval=5, light_type="West")
+test = SolarCalculator(user_location={"latitude": "47.466748", "longitude": "-122.34722"}, current_date=datetime.today(), water_interval=10, light_type="West")
+# test = SolarCalculator(user_location={"latitude": "47.466748", "longitude": "-122.34722"}, current_date=datetime(2021, 11, 1), water_interval=5, light_type="West")
 
 light_forcast = test.get_daily_sunlight()
 

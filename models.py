@@ -181,6 +181,7 @@ class PlantType(db.Model):
     name = db.Column(db.Text, unique=True, nullable=False)
     base_water = db.Column(db.Integer, nullable=False)
     base_sunlight = db.Column(db.Integer, nullable=False)
+    max_days_without_water = db.Column(db.Integer, nullable=False)
 
 class Plant(db.Model):
     """A plant has a name, image, type, room, and waterschedule."""
