@@ -479,14 +479,17 @@ def view_plant(plant_id):
     edit plant details, view other details, or delete a plant."""
 
     plant = Plant.query.get_or_404(plant_id)
-    room = Room.query.get_or_404(plant.room_id)
-    collection = Collection.query.get_or_404(room.collection_id)
+    owner = plant.room.collection.user_id
+    # room = Room.query.get_or_404(plant.room_id)
+    # collection = Collection.query.get_or_404(room.collection_id)
+    # collection_id = plant.room.collection_id
 
-    if g.user.id == collection.user_id:
+    if g.user.id == owner:
         return render_template('/plant/view_plant.html', plant=plant)
     else:
+        collection_id = plant.room.collection_id
         flash('Access Denied.', 'danger')
-        return redirect(url_for('view_collection', collection_id=collection.id))
+        return redirect(url_for('view_collection', collection_id=collection_id))
 
 @app.route('/uploads/user/<path:filename>')
 def download_file(filename):
@@ -611,7 +614,8 @@ def create_waterschedule(plant):
     ))
     db.session.commit()
 
-@app.route('/collection/room/plant/<int:plant_id>/water-schedule')
+# I might remove this route and add water schedule details to the plant view. This route could also potentially become a route for my client side to send a POST request to trigger the solar calculator and water calculator to create a forcast and update the plant's water schedule details (and the water history table).
+@app.route('/collection/room/plant/<int:plant_id>/water-schedule') 
 @auth_required
 def view_waterschedule(plant_id):
     """View a plant's water schedule by plant id."""

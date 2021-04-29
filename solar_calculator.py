@@ -2,6 +2,7 @@
 
 import requests, json
 from datetime import date, datetime, timedelta, timezone
+from dateutil import tz
 
 BASE_URL = 'https://api.sunrise-sunset.org/json'
 
@@ -37,12 +38,23 @@ class SolarCalculator:
         """Builds a UTC datetime object then converts UTC time to local time. 
         Returns localtime datetime object."""
 
+        #https://stackoverflow.com/questions/4770297/convert-utc-datetime-string-to-local-datetime
+
+        from_zone = tz.tzutc()
+        to_zone = tz.tzlocal()
+
         #build a utc formatted string from API response string
         utc_date_time_str = date.strftime('%Y-%m-%d') + ' ' + time[:-3]
-        #convert the string to a UTC datetime object
-        utc_date_time_obj = datetime.strptime(utc_date_time_str, '%Y-%m-%d %H:%M:%S')
+        utc = datetime.strptime(utc_date_time_str, '%Y-%m-%d %H:%M:%S')
+        # print('################ UTC STRING ################')
+        # print(utc)
 
-        return utc_date_time_obj.replace(tzinfo=timezone.utc).astimezone(tz=None)
+        utc = utc.replace(tzinfo=from_zone)
+        local = utc.astimezone(to_zone)
+        # print('################ LOCAL CONVERSION ################')
+        # print(local)
+
+        return local
 
     def get_data(self, day):
         """Calls the Sunset and sunrise times API for a given date with the user_location.
@@ -55,12 +67,15 @@ class SolarCalculator:
             'date': day})
         
         results = response.json()['results']
+        # print('################ RAW DATA ################')
+        # print(results)
         
-        return {'date': day, 
-        'sunrise': self.convert_UTC__to_localtime(day, results['sunrise']), 
-        'sunset': self.convert_UTC__to_localtime(day, results['sunset']), 
-        'solar_noon': self.convert_UTC__to_localtime(day, results['solar_noon']),
-        'day_length': self.convert_str_to_datetime(day, results['day_length'])}
+        if response.json()['status'] == 'OK':
+            return {'date': day, 
+            'sunrise': self.convert_UTC__to_localtime(day, results['sunrise']), 
+            'sunset': self.convert_UTC__to_localtime(day, results['sunset']), 
+            'solar_noon': self.convert_UTC__to_localtime(day, results['solar_noon']),
+            'day_length': self.convert_str_to_datetime(day, results['day_length'])}
 
     def get_solar_schedule(self):
         """Generates and returns a list of data for given number of dates:
@@ -68,6 +83,9 @@ class SolarCalculator:
 
         solar_schedule = []
         dates = self.generate_dates(self.current_date, self.water_interval)
+
+        # print('################ GENERATED DATES ################')
+        # print(dates)
 
         for day in dates:
             data = self.get_data(day)
@@ -150,16 +168,49 @@ class SolarCalculator:
             
         return plant_max_daily_light
 
-test = SolarCalculator(user_location={"latitude": "47.466748", "longitude": "-122.34722"}, current_date=datetime.today(), water_interval=7, light_type="Southeast")
 
-test2 = SolarCalculator(user_location={"latitude": "-33.854816", "longitude": "151.216454"}, current_date=datetime.today(), water_interval=7, light_type="South")
+#here for testing
+def convert_time_delta_float(time_delta):
+    seconds = time_delta.seconds
+    microseconds = time_delta.microseconds
+
+    return (microseconds / 1000000 + seconds / 60) / 60
+
+
+# test = SolarCalculator(user_location={"latitude": "47.466748", "longitude": "-122.34722"}, current_date=datetime.today(), water_interval=10, light_type="West")
+test = SolarCalculator(user_location={"latitude": "47.466748", "longitude": "-122.34722"}, current_date=datetime(2021, 11, 1), water_interval=5, light_type="West")
 
 light_forcast = test.get_daily_sunlight()
 
 print('################# LIGHT FORCAST BURIEN WA #################')
 print(light_forcast)
 
+total = 0
+for light in light_forcast:
+    hours = convert_time_delta_float(light)
+    total = total + hours
+
+average = total / len(light_forcast)
+
+print('################# LIGHT AVERAGE BURIEN WA #################')
+print(average)
+
+
+
+# test2 = SolarCalculator(user_location={"latitude": "-33.854816", "longitude": "151.216454"}, current_date=datetime.today(), water_interval=21, light_type="North")
+# test2 = SolarCalculator(user_location={"latitude": "-33.854816", "longitude": "151.216454"}, current_date=datetime(2021, 12, 27), water_interval=3, light_type="North")
 
 # light_forcast2 = test2.get_daily_sunlight()
+
 # print('################# LIGHT FORCAST SYDNEY AUSTRALIA #################')
 # print(light_forcast2)
+
+# total = 0
+# for light in light_forcast2:
+#     hours = convert_time_delta_float(light)
+#     total = total + hours
+
+# average2 = total / len(light_forcast2)
+
+# print('################# LIGHT AVERAGE SYDNEY AUSTRALIA #################')
+# print(average2)
