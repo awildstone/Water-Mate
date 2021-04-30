@@ -1,7 +1,7 @@
 """Flask App for Water Mate."""
 
 import os
-from flask import Flask, render_template, request, json, flash, redirect, session, g, url_for, send_from_directory
+from flask import Flask, render_template, request, json, jsonify, flash, redirect, session, g, url_for, send_from_directory
 from flask_debugtoolbar import DebugToolbarExtension #keep only for development
 from sqlalchemy.exc import IntegrityError
 from functools import wraps
@@ -640,7 +640,7 @@ def water_plant(plant_id):
 
     if g.user.id == plant.user_id:
         if water_schedule.manual_mode == True:
-            #update the water schedule and water history table
+
             water_schedule.water_date = datetime.today()
             water_schedule.next_water_date = datetime.today() + timedelta(days=water_schedule.water_interval)
 
@@ -652,12 +652,9 @@ def water_plant(plant_id):
             ))
 
             db.session.commit()
-            flash(f'{plant.name} watered and schedules updated!', 'success')
-            return redirect(url_for('dashboard'))
+            return (jsonify({"status": "OK"}), 201)
         else:
-            #Try to create a new Water Calculator and catch any errors, If errors return to dashboard with the message.
             plant_light_source = LightSource.query.get_or_404(plant.light_id)
-            # light_type = plant_light_source.type
             plant_type = PlantType.query.get_or_404(plant.type_id)
 
             # try:
@@ -667,13 +664,12 @@ def water_plant(plant_id):
                 water_schedule=water_schedule,
                 light_type=plant_light_source.type)
                     
-            #If success, call water_calculator.calculate_water_interval to get the new # days between watering
             new_water_interval = water_calculator.calculate_water_interval()
-            #Update existing water_schedule with new interval, current water date, next water date, ect.
+            
+            water_schedule.water_interval = new_water_interval
             water_schedule.water_date = datetime.today()
             water_schedule.next_water_date = datetime.today() + timedelta(days=new_water_interval)
                 
-            #Create new water history
             db.session.add(WaterHistory(
                 water_date=water_schedule.water_date,
                 notes=request.json['notes'],
@@ -681,15 +677,13 @@ def water_plant(plant_id):
                 water_schedule_id=water_schedule.id))
 
             db.session.commit()
-            flash(f'{plant.name} watered and schedules updated!', 'success')
-            return redirect(url_for('dashboard'))
+            return (jsonify({"status": "OK"}), 201)
 
             # except ConnectionRefusedError:
             #     flash('Unable to connect to solar forcast api! Please try again.', 'danger')
             #     return redirect(url_for('dashboard'))
 
-    flash('Access Denied', 'danger')
-    return redirect(url_for('homepage'))
+    return (jsonify({"access": "DENIED"}), 403)
 
 @app.route('/dashboard/<int:plant_id>/snooze', methods=['POST'])
 @auth_required
@@ -697,12 +691,13 @@ def snooze_plant(plant_id,):
     """Snoozes a plant's water schedule for num of days, for a specific plant id.
     Updates the plant's water schedule and water history table indicating the plant was snoozed."""
 
+    # if request.is_json:
     plant = Plant.query.get_or_404(plant_id)
-    water_schedule = WaterSchedule.query.get_or_404(plant.id)
-    num_days = 3
 
     if g.user.id == plant.user_id:
         #update the water schedule and water history table
+        water_schedule = WaterSchedule.query.get_or_404(plant.id)
+        num_days = 3
         water_schedule.next_water_date = datetime.today() + timedelta(days=num_days)
 
         db.session.add(WaterHistory(
@@ -714,11 +709,9 @@ def snooze_plant(plant_id,):
         ))
 
         db.session.commit()
-        flash(f'{plant.name} snoozed for {num_days} days!', 'success')
-        return redirect(url_for('dashboard'))
+        return (jsonify({"status": "OK"}), 201)
 
-    flash('Access Denied', 'danger')
-    return redirect(url_for('homepage'))
+    return (jsonify({"access": "DENIED"}), 403)
 
 @app.route('/collection/room/plant/<int:plant_id>/water-schedule/edit', methods=['GET', 'POST'])
 @auth_required

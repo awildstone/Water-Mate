@@ -51,9 +51,11 @@ Clicking the snooze button will submit a request to the server to snooze a plant
 const waterButton = document.getElementById('water_button');
 const snoozeButton = document.getElementById('snooze_button');
 
+/* Checks which button triggered the form submit. */
 if (container) {
     container.addEventListener('click', function(e) {
         e.preventDefault();
+
         if (e.target.getAttribute('name') ===  'water_button') {
             let plant_id = e.target.getAttribute('data-plant-id');
             let notes = document.querySelector('textarea').value
@@ -67,19 +69,27 @@ if (container) {
     });
 }
 
+/* Makes a call to the API to water a plant. */
 async function waterPlant(plant_id, notes) {
+    // send post request to server
+    response = await axios.post(`${BASE_URL}dashboard/${plant_id}/water`, {"notes": notes});
+    console.log(response.status)
+    if (response.status === 201) {
+        // remove the updated plant from the dashboard
+        let card = document.querySelector(`div[data-col-id='${plant_id}']`);
+        card.remove();
 
-    await axios.post(`${BASE_URL}dashboard/${plant_id}/water`, {"notes": notes});
-    // remove the updated plant from the dashboard
-    let card = document.querySelector(`div[data-col-id='${plant_id}']`);
-    card.remove();
+    }
 }
 
+/* Makes a call to the API to snooze a plant's water schedule. */
 async function snoozePlant(plant_id, notes) {
-    
-    await axios.post(`${BASE_URL}dashboard/${plant_id}/snooze`, {"notes": notes});
-    // remove the updated plant from the dashboard
-    let card = document.querySelector(`div[data-col-id='${plant_id}']`);
-    card.remove();
+    // send post request to server
+    response = await axios.post(`${BASE_URL}dashboard/${plant_id}/snooze`, {"notes": notes});
+    console.log(response.status)
+    if (response.status === 201) {
+        // remove the updated plant from the dashboard
+        let card = document.querySelector(`div[data-col-id='${plant_id}']`);
+        card.remove();
+    }
 }
-
