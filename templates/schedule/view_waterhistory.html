@@ -1,0 +1,32 @@
+{% extends 'base.html'  %}
+
+{% block title %} Water History For {{ plant.name }} {% endblock %}
+
+{% block content %}
+
+<h1>Water History For {{ plant.name }}</h1>
+
+<p>Here are the details about your plant's watering history:</p>
+
+<table class="table table-striped">
+    <thead>
+      <tr>
+        <th scope="col">Water Date:</th>
+        <th scope="col">Snoozed Days?</th>
+        <th scope="col">Notes:</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for history in water_history %}
+      <tr>
+        <td>{{ history.get_water_date }}</td>
+        <td>{{ history.snooze }}</td>
+        <td>{{ history.notes }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+<a class="btn btn-secondary btn-lg" href="{{ url_for('view_plant', plant_id=plant.id)}}">Back to {{ plant.name }}</a>
+
+{% endblock %}

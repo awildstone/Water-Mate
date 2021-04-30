@@ -211,8 +211,6 @@ class WaterSchedule(db.Model):
         """Gets the current water_date and returns a string representation."""
         return self.water_date.strftime("%m/%d/%Y, %H:%M:%S")
 
-    #create a class method that changes the water interval?
-
 class WaterHistory(db.Model):
     """A Water History has a water date, snooze amount, notes, and a plant and water schedule id."""
 
@@ -224,3 +222,8 @@ class WaterHistory(db.Model):
     notes = db.Column(db.String(200), nullable=False, default='No notes added.')
     plant_id = db.Column(db.Integer, db.ForeignKey('plants.id'), nullable=False)
     water_schedule_id = db.Column(db.Integer, db.ForeignKey('water_schedules.id', ondelete='cascade'), nullable=False) #if water_schedule is deleted, delete history
+
+    @property
+    def get_water_date(self):
+        """Gets the current water_date and returns a string representation."""
+        return self.water_date.strftime("%m/%d/%Y, %H:%M:%S")

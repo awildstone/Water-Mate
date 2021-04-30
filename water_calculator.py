@@ -32,9 +32,11 @@ class WaterCalculator:
 
         if (light_forcast):
             return light_forcast
-        raise ConnectionRefusedError #not sure if this is the appropriate error I should be raising?
+        # raise ConnectionRefusedError #not sure if this is the appropriate error I should be raising?
+
+        light_forcast_arr = light_forcast
     
-    def convert_timedelta_to_float(time_delta):
+    def convert_timedelta_to_float(self, time_delta):
         """Accepts a datetime.timedelta object, extracts the minutes and microseconds,
         then converts the total minutes and microseconds to hours.
         Returns a float representing the total hours."""
@@ -44,12 +46,12 @@ class WaterCalculator:
 
         return (microseconds / 1000000 + seconds / 60) / 60
     
-    def calculate_average_hours(time_list):
+    def calculate_average_hours(self, time_list):
         """Accepts a list of datetime.timedelta objects, calculates and returns the average."""
         
-        total_hours = 0
+        total = 0
         for time in time_list:
-            hours = convert_timedelta_to_float(time)
+            hours = self.convert_timedelta_to_float(time)
             total = total + hours
         
         return total / len(time_list)
@@ -70,9 +72,16 @@ class WaterCalculator:
 
         4. No matter what, the water_interval will never exceed the plant type max_days_without_water so plants in less than optimal conditions will recieve enough water to stay alive and plants in extreme conditions will not recieve too much water so as to cause root rot."""
 
-        base_water = self.plant_type.base_water
+        # base_water = self.plant_type.base_water
         base_light = self.plant_type.base_sunlight
         new_water_interval = self.water_schedule.water_interval
+
+        #compare the average hours with the optimal hours and adjust accordingly given the respective thresholds
+        average_hours = self.calculate_average_hours(self.light_forcast)
+        print('########## AVG HOURS #############')
+        print(average_hours)
+        res = average_hours - base_light
+        adjustment = 0
         
         positive_threshold = {
             res >= 0 and res < .5: -1,
@@ -90,17 +99,16 @@ class WaterCalculator:
             res <= -6 and res > -9: 14,
             res <= -10: 20}
         
-        #compare the average hours with the optimal hours and adjust accordingly given the respective thresholds
-        average_hours = calculate_average_hours(self.light_forcast)
-        res = average_hours - base_light
-        adjustment = 0
-
         if res >= 0:
             #the plant is getting too much light
-            adjustment = positive_threshold[res]
+            for key in positive_threshold:
+                if (key):
+                    adjustment = positive_threshold[key]
         else:
             #the plant is not getting enough light
-            adjustment = negative_threshold[res]
+            for key in negative_threshold:
+                if (key):
+                    adjustment = negative_threshold[key]
         
         #set the new number of days between watering
         new_water_interval += adjustment

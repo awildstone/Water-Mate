@@ -135,41 +135,41 @@ class SolarCalculator:
 
             if float(self.user_location['latitude']) > 0:
                 #user is in the northern hemisphere
-                print(nh_light_calculations[self.light_type])
+                # print(nh_light_calculations[self.light_type])
                 plant_max_daily_light.append(nh_light_calculations[self.light_type])
             else:
                 #user is in the southern hemisphere
-                print(sh_light_calculations[self.light_type])
+                # print(sh_light_calculations[self.light_type])
                 plant_max_daily_light.append(sh_light_calculations[self.light_type])
             
         return plant_max_daily_light
 
 
-#here for testing
-def convert_time_delta_float(time_delta):
-    seconds = time_delta.seconds
-    microseconds = time_delta.microseconds
+# #here for testing
+# def convert_time_delta_float(time_delta):
+#     seconds = time_delta.seconds
+#     microseconds = time_delta.microseconds
 
-    return (microseconds / 1000000 + seconds / 60) / 60
+#     return (microseconds / 1000000 + seconds / 60) / 60
 
 
-test = SolarCalculator(user_location={"latitude": "47.466748", "longitude": "-122.34722"}, current_date=datetime.today(), water_interval=10, light_type="West")
-# test = SolarCalculator(user_location={"latitude": "47.466748", "longitude": "-122.34722"}, current_date=datetime(2021, 11, 1), water_interval=5, light_type="West")
+# test = SolarCalculator(user_location={"latitude": "47.466748", "longitude": "-122.34722"}, current_date=datetime.today(), water_interval=10, light_type="West")
+# # test = SolarCalculator(user_location={"latitude": "47.466748", "longitude": "-122.34722"}, current_date=datetime(2021, 11, 1), water_interval=5, light_type="West")
 
-light_forcast = test.get_daily_sunlight()
+# light_forcast = test.get_daily_sunlight()
 
-print('################# LIGHT FORCAST BURIEN WA #################')
-print(light_forcast)
+# print('################# LIGHT FORCAST BURIEN WA #################')
+# print(light_forcast)
 
-total = 0
-for light in light_forcast:
-    hours = convert_time_delta_float(light)
-    total = total + hours
+# total = 0
+# for light in light_forcast:
+#     hours = convert_time_delta_float(light)
+#     total = total + hours
 
-average = total / len(light_forcast)
+# average = total / len(light_forcast)
 
-print('################# LIGHT AVERAGE BURIEN WA #################')
-print(average)
+# print('################# LIGHT AVERAGE BURIEN WA #################')
+# print(average)
 
 
 

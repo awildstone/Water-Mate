@@ -607,15 +607,9 @@ def create_waterschedule(plant):
 def dashboard():
     """Show the user dashboard for a specific user. If the user submits a request to water or snooze a plant, the form data is posted to the respective view."""
 
-    form = AddWaterHistoryNotes(csrf_enabled=False)
+    form = AddWaterHistoryNotes(meta={'csrf': False})
 
-    # if form.validate_on_submit():
-    #     if "water_button" in request.form:
-    #         #call water_plant(plant_id)
-    #         return redirect(url_for('dashboard'))
-    #     if "snooze_button" in request.form:
-    #         #call snooze_plant(plant_id)
-    #         return redirect(url_for('dashboard'))
+    #this route needs to query and return all plants where the water schedule > next water date is equal to the current date
 
     return render_template('/user/dashboard.html', user=g.user, plants=g.user.plants, form=form)
 
@@ -645,14 +639,14 @@ def water_plant(plant_id):
     water_schedule = WaterSchedule.query.get_or_404(plant.id)
 
     if g.user.id == plant.user_id:
-        if plant.water_schedule.manual_mode == True:
+        if water_schedule.manual_mode == True:
             #update the water schedule and water history table
             water_schedule.water_date = datetime.today()
             water_schedule.next_water_date = datetime.today() + timedelta(days=water_schedule.water_interval)
 
             db.session.add(WaterHistory(
                 water_date=water_schedule.water_date,
-                notes=form.notes.data,
+                notes=request.json['notes'],
                 plant_id=plant.id,
                 water_schedule_id=water_schedule.id
             ))
@@ -662,33 +656,37 @@ def water_plant(plant_id):
             return redirect(url_for('dashboard'))
         else:
             #Try to create a new Water Calculator and catch any errors, If errors return to dashboard with the message.
-            try:
-                water_calculator = WaterCalculator(
-                    user=g.user,
-                    plant_type=plant.type,
-                    water_schedule=water_schedule,
-                    light_type=plant.light_type
-                )
-                #If success, call water_calculator.calculate_water_interval to get the new # days between watering
-                new_water_interval = water_calculator.calculate_water_interval()
-                #Update existing water_schedule with new interval, current water date, next water date, ect.
-                water_schedule.water_date = datetime.today()
-                water_schedule.next_water_date = datetime.today() + timedelta(days=new_water_interval)
-                
-                #Create new water history
-                db.session.add(WaterHistory(
-                    water_date=water_schedule.water_date,
-                    notes=form.notes.data,
-                    plant_id=plant.id,
-                    water_schedule_id=water_schedule.id
-             ))
-                db.session.commit()
-                flash(f'{plant.name} watered and schedules updated!', 'success')
-                return redirect(url_for('dashboard'))
+            plant_light_source = LightSource.query.get_or_404(plant.light_id)
+            # light_type = plant_light_source.type
+            plant_type = PlantType.query.get_or_404(plant.type_id)
 
-            except ConnectionRefusedError:
-                flash('Unable to connect to solar forcast api! Please try again.', 'danger')
-                return redirect(url_for('dashboard'))
+            # try:
+            water_calculator = WaterCalculator(
+                user=g.user,
+                plant_type=plant_type,
+                water_schedule=water_schedule,
+                light_type=plant_light_source.type)
+                    
+            #If success, call water_calculator.calculate_water_interval to get the new # days between watering
+            new_water_interval = water_calculator.calculate_water_interval()
+            #Update existing water_schedule with new interval, current water date, next water date, ect.
+            water_schedule.water_date = datetime.today()
+            water_schedule.next_water_date = datetime.today() + timedelta(days=new_water_interval)
+                
+            #Create new water history
+            db.session.add(WaterHistory(
+                water_date=water_schedule.water_date,
+                notes=request.json['notes'],
+                plant_id=plant.id,
+                water_schedule_id=water_schedule.id))
+
+            db.session.commit()
+            flash(f'{plant.name} watered and schedules updated!', 'success')
+            return redirect(url_for('dashboard'))
+
+            # except ConnectionRefusedError:
+            #     flash('Unable to connect to solar forcast api! Please try again.', 'danger')
+            #     return redirect(url_for('dashboard'))
 
     flash('Access Denied', 'danger')
     return redirect(url_for('homepage'))
@@ -699,6 +697,7 @@ def snooze_plant(plant_id,):
     """Snoozes a plant's water schedule for num of days, for a specific plant id.
     Updates the plant's water schedule and water history table indicating the plant was snoozed."""
 
+    plant = Plant.query.get_or_404(plant_id)
     water_schedule = WaterSchedule.query.get_or_404(plant.id)
     num_days = 3
 
@@ -709,7 +708,7 @@ def snooze_plant(plant_id,):
         db.session.add(WaterHistory(
             water_date=water_schedule.water_date,
             snooze=num_days,
-            notes=form.notes.data,
+            notes=request.json['notes'],
             plant_id=plant.id,
             water_schedule_id=water_schedule.id
         ))
@@ -748,3 +747,18 @@ def edit_waterschedule(plant_id):
         return redirect(url_for('view_plant', plant_id=plant_id))
     
     return render_template('/schedule/edit_waterschedule.html', form=form, water_schedule=water_schedule, plant=plant)
+
+@app.route('/collection/room/plant/<int:plant_id>/water-history')
+@auth_required
+def view_waterhistory(plant_id):
+    """View the water history table for a plant via the plant's id."""
+
+    plant = Plant.query.get_or_404(plant_id)
+    water_schedule = WaterSchedule.query.filter_by(plant_id=plant.id).first()
+    water_history = WaterHistory.query.filter_by(water_schedule_id=water_schedule.id)
+
+    if g.user.id == plant.user_id:
+        return render_template('/schedule/view_waterhistory.html', plant=plant, water_history=water_history)
+    
+    flash('Access Denied.', 'danger')
+    return redirect(url_for('view_plant', plant_id=plant_id)) 

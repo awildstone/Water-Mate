@@ -21,7 +21,7 @@
       <div class="card-body">
         <h3 class="card-title"><a href="{{ url_for('view_plant', plant_id=plant.id)}}">{{ plant.name }}</a></h3>
         <div class="card-text"><a class="btn btn-primary m-2 notes_btn">Add Notes</a><form method="POST" class="notes_form" style="display: none;">
-          {{ form.hidden_tag() }}
+          <!-- {{ form.hidden_tag() }} -->
             <div class="mb-3">
             {{ form.notes }}
             {% for error in form.notes.errors %}

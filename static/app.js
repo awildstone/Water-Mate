@@ -54,35 +54,32 @@ const snoozeButton = document.getElementById('snooze_button');
 if (container) {
     container.addEventListener('click', function(e) {
         e.preventDefault();
-
         if (e.target.getAttribute('name') ===  'water_button') {
             let plant_id = e.target.getAttribute('data-plant-id');
             let notes = document.querySelector('textarea').value
             waterPlant(plant_id, notes);
         }
-
         if (e.target.getAttribute('name') ===  'snooze_button') {
             let plant_id = e.target.getAttribute('data-plant-id');
             let notes = document.querySelector('textarea').value
             snoozePlant(plant_id, notes);
         }
-
     });
 }
 
 async function waterPlant(plant_id, notes) {
 
     await axios.post(`${BASE_URL}dashboard/${plant_id}/water`, {"notes": notes});
-
-    // let card = document.querySelector(`div[data-col-id='${plant_id}']`);
-    // card.remove();
+    // remove the updated plant from the dashboard
+    let card = document.querySelector(`div[data-col-id='${plant_id}']`);
+    card.remove();
 }
 
 async function snoozePlant(plant_id, notes) {
     
     await axios.post(`${BASE_URL}dashboard/${plant_id}/snooze`, {"notes": notes});
-
-    // let card = document.querySelector(`div[data-col-id='${plant_id}']`);
-    // card.remove();
+    // remove the updated plant from the dashboard
+    let card = document.querySelector(`div[data-col-id='${plant_id}']`);
+    card.remove();
 }
 
