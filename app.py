@@ -594,7 +594,7 @@ def create_waterschedule(plant):
 
     plant_type = PlantType.query.get_or_404(plant.type_id)
 
-    db.session.add(WaterSchedule(
+    plant.water_schedule.append(WaterSchedule(
         water_date=datetime.today(),
         next_water_date=datetime.today() + timedelta(days=plant_type.base_water),
         water_interval=plant_type.base_water,
@@ -609,7 +609,13 @@ def dashboard():
 
     form = AddWaterHistoryNotes(meta={'csrf': False})
 
-    #this route needs to query and return all plants where the water schedule > next water date is equal to the current date
+    #plants=g.user.plants should replace with plants=plants_to_water when I am done testing
+    plants = Plant.query.filter_by(user_id=g.user.id).all()
+    schedules = WaterSchedule.query.filter_by(next_water_date=datetime.today()).all()
+    plant_ids = [schedule.plant_id for schedule in schedules]
+    plants_to_water = [plant for plant in plants if plant.id in plant_ids]
+
+    print(plants_to_water)
 
     return render_template('/user/dashboard.html', user=g.user, plants=g.user.plants, form=form)
 
@@ -644,7 +650,7 @@ def water_plant(plant_id):
             water_schedule.water_date = datetime.today()
             water_schedule.next_water_date = datetime.today() + timedelta(days=water_schedule.water_interval)
 
-            db.session.add(WaterHistory(
+            water_schedule.water_history.append(WaterHistory(
                 water_date=water_schedule.water_date,
                 notes=request.json['notes'],
                 plant_id=plant.id,
@@ -657,31 +663,44 @@ def water_plant(plant_id):
             plant_light_source = LightSource.query.get_or_404(plant.light_id)
             plant_type = PlantType.query.get_or_404(plant.type_id)
 
-            # try:
-            water_calculator = WaterCalculator(
-                user=g.user,
-                plant_type=plant_type,
-                water_schedule=water_schedule,
-                light_type=plant_light_source.type)
+            #if light source is artifical, just update the next water date and add the history record.
+            if plant_light_source.type == 'Artificial':
+                water_schedule.next_water_date = datetime.today() + timedelta(days=water_schedule.water_interval)
+
+                water_schedule.water_history.append(WaterHistory(
+                    water_date=datetime.today(),
+                    notes=request.json['notes'],
+                    plant_id=plant.id,
+                    water_schedule_id=water_schedule.id))
+
+                db.session.commit()
+                return (jsonify({"status": "OK"}), 201)
+
+            #if the light source is natural, we need to calculate the next_water_date using the solar calculator light forcast and water calculator water internal.
+            try:
+                water_calculator = WaterCalculator(
+                    user=g.user,
+                    plant_type=plant_type,
+                    water_schedule=water_schedule,
+                    light_type=plant_light_source.type)
                     
-            new_water_interval = water_calculator.calculate_water_interval()
-            
-            water_schedule.water_interval = new_water_interval
-            water_schedule.water_date = datetime.today()
-            water_schedule.next_water_date = datetime.today() + timedelta(days=new_water_interval)
+                new_water_interval = water_calculator.calculate_water_interval()
+
+                water_schedule.water_interval = new_water_interval
+                water_schedule.water_date = datetime.today()
+                water_schedule.next_water_date = datetime.today() + timedelta(days=new_water_interval)
                 
-            db.session.add(WaterHistory(
-                water_date=water_schedule.water_date,
-                notes=request.json['notes'],
-                plant_id=plant.id,
-                water_schedule_id=water_schedule.id))
+                water_schedule.water_history.append(WaterHistory(
+                    water_date=water_schedule.water_date,
+                    notes=request.json['notes'],
+                    plant_id=plant.id,
+                    water_schedule_id=water_schedule.id))
 
-            db.session.commit()
-            return (jsonify({"status": "OK"}), 201)
+                db.session.commit()
+                return (jsonify({"status": "OK"}), 201)
 
-            # except ConnectionRefusedError:
-            #     flash('Unable to connect to solar forcast api! Please try again.', 'danger')
-            #     return redirect(url_for('dashboard'))
+            except ConnectionRefusedError:
+                (jsonify({"connection": "REFUSED"}), 404)
 
     return (jsonify({"access": "DENIED"}), 403)
 
@@ -700,7 +719,7 @@ def snooze_plant(plant_id,):
         num_days = 3
         water_schedule.next_water_date = datetime.today() + timedelta(days=num_days)
 
-        db.session.add(WaterHistory(
+        water_schedule.water_history.append(WaterHistory(
             water_date=water_schedule.water_date,
             snooze=num_days,
             notes=request.json['notes'],

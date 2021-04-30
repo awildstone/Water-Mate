@@ -32,7 +32,7 @@ class WaterCalculator:
 
         if (light_forcast):
             return light_forcast
-        # raise ConnectionRefusedError #not sure if this is the appropriate error I should be raising?
+        raise ConnectionRefusedError #not sure if this is the appropriate error I should be raising?
 
         light_forcast_arr = light_forcast
     

@@ -26,7 +26,8 @@ if (checkbox) {
 }
 
 /* Selector for the Card Elements container.
-If the "Add Notes" button is clicked show the "Add Notes" form. */
+If the "Add Notes" button is clicked show the "Add Notes" form.
+If the "Add Notes" button is clicked again, hide the form. */
 
 const container = document.getElementById('plants_container');
 
@@ -54,7 +55,6 @@ const snoozeButton = document.getElementById('snooze_button');
 /* Checks which button triggered the form submit. */
 if (container) {
     container.addEventListener('click', function(e) {
-        e.preventDefault();
 
         if (e.target.getAttribute('name') ===  'water_button') {
             let plant_id = e.target.getAttribute('data-plant-id');
@@ -78,7 +78,6 @@ async function waterPlant(plant_id, notes) {
         // remove the updated plant from the dashboard
         let card = document.querySelector(`div[data-col-id='${plant_id}']`);
         card.remove();
-
     }
 }
 

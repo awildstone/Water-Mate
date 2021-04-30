@@ -204,7 +204,7 @@ class WaterSchedule(db.Model):
     manual_mode = db.Column(db.Boolean, nullable=False, default=False)
     plant_id = db.Column(db.Integer, db.ForeignKey('plants.id', ondelete='cascade'), nullable=False) #if plant is deleted, delete schedule
 
-    water_history = db.relationship('WaterHistory', backref='water_schedule')
+    water_history = db.relationship('WaterHistory', backref='water_schedule', cascade="all, delete-orphan")
 
     @property
     def get_water_date(self):

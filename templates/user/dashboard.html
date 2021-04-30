@@ -7,7 +7,11 @@
 <h1>Dashboard</h1>
 <p>Welcome to the watering dashboard, {{ user.name }}!</p>
 
+{% if plants %}
 <p>Here are the plants that need watering today:</p>
+{% else %}
+<p>There are no plants to water today!</p>
+{% endif %}
 
 <div class="row row-cols-1 row-cols-md-3 g-4" id="plants_container">
 {% for plant in plants %}
@@ -20,6 +24,7 @@
       {% endif %}
       <div class="card-body">
         <h3 class="card-title"><a href="{{ url_for('view_plant', plant_id=plant.id)}}">{{ plant.name }}</a></h3>
+        <!-- <h3 class="card-title">{{ plant.name }}</h3> -->
         <div class="card-text"><a class="btn btn-primary m-2 notes_btn">Add Notes</a><form method="POST" class="notes_form" style="display: none;">
           <!-- {{ form.hidden_tag() }} -->
             <div class="mb-3">
@@ -29,7 +34,7 @@
             {{ error }}
             </small>
             {% endfor %}
-            <button type="submit" name="water_button" data-plant-id="{{ plant.id }}" class="btn btn-success m-2">Water</button><button type="submit" name="snooze_button" data-plant-id="{{ plant.id }}" class="btn btn-warning m-2">Snooze</button>
+            <button type="button" name="water_button" data-plant-id="{{ plant.id }}" class="btn btn-success m-2">Water</button><button type="button" name="snooze_button" data-plant-id="{{ plant.id }}" class="btn btn-warning m-2">Snooze</button>
             </div>
             <!-- <button type="submit" name="water_button" data-plant-id="{{ plant.id }}" class="btn btn-success m-2">Water</button><button type="submit" name="snooze_button" data-plant-id="{{ plant.id }}" class="btn btn-warning m-2">Snooze</button> -->
           </form>
