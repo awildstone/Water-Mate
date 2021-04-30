@@ -170,6 +170,8 @@ class PlantType(db.Model):
     base_sunlight = db.Column(db.Integer, nullable=False)
     max_days_without_water = db.Column(db.Integer, nullable=False)
 
+    plants = db.relationship('Plant', backref='type')
+
 class Plant(db.Model):
     """A plant has a name, image, type, room, and waterschedule."""
 
@@ -219,6 +221,6 @@ class WaterHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     water_date = db.Column(db.DateTime, nullable=False)
     snooze = db.Column(db.Integer)
-    notes = db.Column(db.String(200))
+    notes = db.Column(db.String(200), nullable=False, default='No notes added.')
     plant_id = db.Column(db.Integer, db.ForeignKey('plants.id'), nullable=False)
     water_schedule_id = db.Column(db.Integer, db.ForeignKey('water_schedules.id', ondelete='cascade'), nullable=False) #if water_schedule is deleted, delete history

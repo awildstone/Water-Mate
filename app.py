@@ -1,7 +1,7 @@
 """Flask App for Water Mate."""
 
 import os
-from flask import Flask, render_template, request, flash, redirect, session, g, url_for, send_from_directory
+from flask import Flask, render_template, request, json, flash, redirect, session, g, url_for, send_from_directory
 from flask_debugtoolbar import DebugToolbarExtension #keep only for development
 from sqlalchemy.exc import IntegrityError
 from functools import wraps
@@ -10,6 +10,7 @@ from forms import *
 from werkzeug.utils import secure_filename
 from location import UserLocation
 from datetime import datetime, timedelta
+from water_calculator import WaterCalculator
 
 CURRENT_USER_KEY = 'current_user'
 UPLOAD_FOLDER = 'uploads/user'
@@ -183,16 +184,6 @@ def logout():
 def get_started():
     """Show getting started page."""
     return render_template('get_started.html')
-
-@app.route('/dashboard')
-@auth_required
-def dashboard():
-    """Show the user dashboard for a specific user."""
-    #this is probably the most complicated page to figure out the mechanics. I will come back to this page once the other routes are setup and functioning.
-    user = g.user
-    plants = user.plants
-
-    return render_template('/user/dashboard.html', user=user, plants=plants)
 
 #view user profile route
 #edit user profile route
@@ -479,13 +470,9 @@ def view_plant(plant_id):
     edit plant details, view other details, or delete a plant."""
 
     plant = Plant.query.get_or_404(plant_id)
-    owner = plant.room.collection.user_id
     water_schedule = WaterSchedule.query.filter_by(plant_id=plant_id).first()
-    # room = Room.query.get_or_404(plant.room_id)
-    # collection = Collection.query.get_or_404(room.collection_id)
-    # collection_id = plant.room.collection_id
 
-    if g.user.id == owner:
+    if g.user.id == plant.user_id:
         return render_template('/plant/view_plant.html', plant=plant, water_schedule=water_schedule)
     else:
         collection_id = plant.room.collection_id
@@ -494,6 +481,7 @@ def view_plant(plant_id):
 
 @app.route('/uploads/user/<path:filename>')
 def download_file(filename):
+    """Downloads the image from the respective user upload folder."""
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
 
 @app.route('/collection/rooms/<int:room_id>/add-plant', methods=['GET', 'POST'])
@@ -555,7 +543,7 @@ def edit_plant(plant_id):
     #set the light_source query for the form
     form.light_source.query = LightSource.query.filter_by(room_id=room.id).all()
 
-    if g.user.id == collection.user_id:
+    if g.user.id == plant.user_id:
         if form.validate_on_submit():
             #securely validate image (if included)
             img = form.image.data
@@ -587,7 +575,7 @@ def delete_plant(plant_id):
     room = Room.query.get_or_404(plant.room_id)
     collection = Collection.query.get_or_404(room.collection_id)
 
-    if g.user.id == collection.user_id:
+    if g.user.id == plant.user_id:
         db.session.delete(plant)
         db.session.commit()
         return redirect(url_for('view_room', room_id=room.id))
@@ -606,14 +594,30 @@ def create_waterschedule(plant):
 
     plant_type = PlantType.query.get_or_404(plant.type_id)
 
-    new_waterschedule = WaterSchedule()
     db.session.add(WaterSchedule(
         water_date=datetime.today(),
-        next_water_date=datetime.today() + timedelta(days=plant_type.base_water), #set the initial next water date based on current date + base plant_type water interval 
+        next_water_date=datetime.today() + timedelta(days=plant_type.base_water),
         water_interval=plant_type.base_water,
         plant_id=plant.id
     ))
     db.session.commit()
+
+@app.route('/dashboard')
+@auth_required
+def dashboard():
+    """Show the user dashboard for a specific user. If the user submits a request to water or snooze a plant, the form data is posted to the respective view."""
+
+    form = AddWaterHistoryNotes(csrf_enabled=False)
+
+    # if form.validate_on_submit():
+    #     if "water_button" in request.form:
+    #         #call water_plant(plant_id)
+    #         return redirect(url_for('dashboard'))
+    #     if "snooze_button" in request.form:
+    #         #call snooze_plant(plant_id)
+    #         return redirect(url_for('dashboard'))
+
+    return render_template('/user/dashboard.html', user=g.user, plants=g.user.plants, form=form)
 
 # I might remove this route and add water schedule details to the plant view. This route could also potentially become a route for my client side to send a POST request to trigger the solar calculator and water calculator to create a forcast and update the plant's water schedule details (and the water history table).
 # @app.route('/collection/room/plant/<int:plant_id>/water-schedule') 
@@ -631,6 +635,91 @@ def create_waterschedule(plant):
 #     else:
 #         flash('Access Denied.', 'danger')
 #         return redirect(url_for('view_plant', plant_id=plant_id))
+
+@app.route('/dashboard/<int:plant_id>/water', methods=['POST'])
+@auth_required
+def water_plant(plant_id):
+    """Waters a plant by plant id, updates the plant water schedule and updates the plant water history table."""
+
+    plant = Plant.query.get_or_404(plant_id)
+    water_schedule = WaterSchedule.query.get_or_404(plant.id)
+
+    if g.user.id == plant.user_id:
+        if plant.water_schedule.manual_mode == True:
+            #update the water schedule and water history table
+            water_schedule.water_date = datetime.today()
+            water_schedule.next_water_date = datetime.today() + timedelta(days=water_schedule.water_interval)
+
+            db.session.add(WaterHistory(
+                water_date=water_schedule.water_date,
+                notes=form.notes.data,
+                plant_id=plant.id,
+                water_schedule_id=water_schedule.id
+            ))
+
+            db.session.commit()
+            flash(f'{plant.name} watered and schedules updated!', 'success')
+            return redirect(url_for('dashboard'))
+        else:
+            #Try to create a new Water Calculator and catch any errors, If errors return to dashboard with the message.
+            try:
+                water_calculator = WaterCalculator(
+                    user=g.user,
+                    plant_type=plant.type,
+                    water_schedule=water_schedule,
+                    light_type=plant.light_type
+                )
+                #If success, call water_calculator.calculate_water_interval to get the new # days between watering
+                new_water_interval = water_calculator.calculate_water_interval()
+                #Update existing water_schedule with new interval, current water date, next water date, ect.
+                water_schedule.water_date = datetime.today()
+                water_schedule.next_water_date = datetime.today() + timedelta(days=new_water_interval)
+                
+                #Create new water history
+                db.session.add(WaterHistory(
+                    water_date=water_schedule.water_date,
+                    notes=form.notes.data,
+                    plant_id=plant.id,
+                    water_schedule_id=water_schedule.id
+             ))
+                db.session.commit()
+                flash(f'{plant.name} watered and schedules updated!', 'success')
+                return redirect(url_for('dashboard'))
+
+            except ConnectionRefusedError:
+                flash('Unable to connect to solar forcast api! Please try again.', 'danger')
+                return redirect(url_for('dashboard'))
+
+    flash('Access Denied', 'danger')
+    return redirect(url_for('homepage'))
+
+@app.route('/dashboard/<int:plant_id>/snooze', methods=['POST'])
+@auth_required
+def snooze_plant(plant_id,):
+    """Snoozes a plant's water schedule for num of days, for a specific plant id.
+    Updates the plant's water schedule and water history table indicating the plant was snoozed."""
+
+    water_schedule = WaterSchedule.query.get_or_404(plant.id)
+    num_days = 3
+
+    if g.user.id == plant.user_id:
+        #update the water schedule and water history table
+        water_schedule.next_water_date = datetime.today() + timedelta(days=num_days)
+
+        db.session.add(WaterHistory(
+            water_date=water_schedule.water_date,
+            snooze=num_days,
+            notes=form.notes.data,
+            plant_id=plant.id,
+            water_schedule_id=water_schedule.id
+        ))
+
+        db.session.commit()
+        flash(f'{plant.name} snoozed for {num_days} days!', 'success')
+        return redirect(url_for('dashboard'))
+
+    flash('Access Denied', 'danger')
+    return redirect(url_for('homepage'))
 
 @app.route('/collection/room/plant/<int:plant_id>/water-schedule/edit', methods=['GET', 'POST'])
 @auth_required

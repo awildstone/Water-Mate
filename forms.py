@@ -15,7 +15,7 @@ class LocationForm(FlaskForm):
 
     city = StringField('City', validators=[InputRequired(message='You must enter your city for an accurate location.')])
     state = StringField('State/Territory', validators=[InputRequired(message='You must enter your state/territory for an accurate location.')])
-    country = StringField('State', validators=[InputRequired(message='You must enter your country for an accurate location.')])
+    country = StringField('Country', validators=[InputRequired(message='You must enter your country for an accurate location.')])
 
 class SignupForm(FlaskForm):
     """Form to sign up a new user."""

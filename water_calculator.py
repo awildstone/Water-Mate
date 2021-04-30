@@ -24,7 +24,7 @@ class WaterCalculator:
         calculator = SolarCalculator(
             user_location=self.user.get_coordinates,
             current_date=self.water_schedule.water_date,
-            water_interval=self.water_schedule.water_interval
+            water_interval=self.water_schedule.water_interval,
             light_type = self.light_type
             )
 
@@ -55,7 +55,7 @@ class WaterCalculator:
         return total / len(time_list)
 
 
-    def calculate_next_water_date(self):
+    def calculate_water_interval(self):
         """Calculates the water_interval and next_water_date using data from the plant type's base_water (days between water frequency), 
         plant type's base_sunlight (optium daily sunlight requirements), and the calculated light forcast.
         
@@ -75,19 +75,19 @@ class WaterCalculator:
         new_water_interval = self.water_schedule.water_interval
         
         positive_threshold = {
-            res >= 0 and < .5: -1,
-            res >= .5 and < 1: -2,
-            res >= 1 and < 3: -3, 
-            res >= 3 and < 6: -7,
-            res >= 6 and < 9: -14
+            res >= 0 and res < .5: -1,
+            res >= .5 and res < 1: -2,
+            res >= 1 and res < 3: -3, 
+            res >= 3 and res < 6: -7,
+            res >= 6 and res < 9: -14,
             res >= 10: -20}
 
         negative_threshold = {
-            res <= 0 and > -.5: 1,
-            res <= -.5 and > -1: 2,
-            res <= -1 and > -3: 3, 
-            res <= -3 and > -6: 7,
-            res <= -6 and > -9: 14,
+            res <= 0 and res > -.5: 1,
+            res <= -.5 and res > -1: 2,
+            res <= -1 and res > -3: 3, 
+            res <= -3 and res > -6: 7,
+            res <= -6 and res > -9: 14,
             res <= -10: 20}
         
         #compare the average hours with the optimal hours and adjust accordingly given the respective thresholds
@@ -98,7 +98,7 @@ class WaterCalculator:
         if res >= 0:
             #the plant is getting too much light
             adjustment = positive_threshold[res]
-        else
+        else:
             #the plant is not getting enough light
             adjustment = negative_threshold[res]
         
