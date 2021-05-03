@@ -5,48 +5,57 @@
 {% block content %}
 
 <h1>Dashboard</h1>
-<p>Welcome to the watering dashboard, {{ user.name }}!</p>
+<p>Welcome to the dashboard, {{ user.name }}!</p>
+<p><a href="{{ url_for('add_collection') }}" class="btn btn-success">Add a Collection</a></p>
 
-{% if plants %}
-<p>Here are the plants that need watering today:</p>
-{% else %}
-<p>There are no plants to water today!</p>
-{% endif %}
+{% if collections %}
 
-<div class="row row-cols-1 row-cols-md-3 g-4" id="plants_container">
-{% for plant in plants %}
-  <div class="col" data-col-id="{{ plant.id }}">
-    <div class="card h-100" id="{{ plant.id }}" style="width: 14rem;">
-      {% if '/static/img/' not in plant.image %}
-        <img src="{{ url_for('download_file', filename=plant.image) }}" class="card-img-top" alt="{{ plant.name }}">
-      {% else %}
-        <img src="{{ plant.image }}" class="card-img-top" alt="{{ plant.name }}">
-      {% endif %}
-      <div class="card-body">
-        <h3 class="card-title"><a href="{{ url_for('view_plant', plant_id=plant.id)}}">{{ plant.name }}</a></h3>
-        <!-- <h3 class="card-title">{{ plant.name }}</h3> -->
-        <div class="card-text"><a class="btn btn-primary m-2 notes_btn">Add Notes</a><form method="POST" class="notes_form" style="display: none;">
-          <!-- {{ form.hidden_tag() }} -->
-            <div class="mb-3">
-            {{ form.notes }}
-            {% for error in form.notes.errors %}
-            <small class="form-text text-danger">
-            {{ error }}
-            </small>
+  {% for collection in collections %}
+    <div class="card col bg-light m-4">
+      <h2 class="m-3" style="display: inline;">{{ collection.name }} Collection</h2>
+    <div class="col">
+      <a href="{{ url_for('add_room', collection_id=collection.id) }}" class="card-link btn btn-success">Add Room</a>
+      <a href="{{ url_for('edit_collection', collection_id=collection.id) }}" class="card-link btn btn-warning m-2">Edit {{ collection.name }}</a>
+      <form method="POST" action="{{ url_for('delete_collection', collection_id=collection.id)}}" style="display: inline;"><button class="btn btn-danger m-2">Delete {{ collection.name }}</button></form>
+    </div>
+
+    <div class="row text-left">
+    {% for room in collection.rooms %}
+      <div class="col">
+        <div class="card mx-auto m-2" style="width: 18rem;">
+          <div class="card-body">
+            <h4 class="card-title"><a href="{{ url_for('view_room', room_id=room.id) }}">{{ room.name }}</a></h4>
+            <p>Visit {{ room.name }} to edit room details, or add new lightsources and plants.</p>
+            <a href="{{ url_for('view_room', room_id=room.id) }}" class="card-link btn btn-info btn-sm">Visit</a>
+            <a href="{{ url_for('edit_room', room_id=room.id) }}" class="card-link btn btn-warning btn-sm">Edit</a>
+            <form method="POST" action="{{ url_for('delete_room', room_id=room.id) }}" class="card-link" style="display: inline;"><button class="btn btn-danger btn-sm">Delete</button></form>
+          </div>
+          <div class="card-body list-group-item-secondary">
+            <h5>Light Sources</h5>
+            <p>View plants using this lightsource.</p>
+            {% for light in room.lightsources %}
+              <a href="{{ url_for('view_lightsource_plants', lightsource_id=light.id)}}" class="card-link">{{ light.type }}</a>
             {% endfor %}
-            <button type="button" name="water_button" data-plant-id="{{ plant.id }}" class="btn btn-success m-2">Water</button><button type="button" name="snooze_button" data-plant-id="{{ plant.id }}" class="btn btn-warning m-2">Snooze</button>
-            </div>
-            <!-- <button type="submit" name="water_button" data-plant-id="{{ plant.id }}" class="btn btn-success m-2">Water</button><button type="submit" name="snooze_button" data-plant-id="{{ plant.id }}" class="btn btn-warning m-2">Snooze</button> -->
-          </form>
-          <!-- <p class="card-text"><button type="submit" id="water_button" class="btn btn-success m-2">Water</button><button type="submit" id="snooze_button" class="btn btn-warning m-2">Snooze</button></p> -->
+          </div>
+          <div class="card-body list-group-item-success">
+            <h5>Plants</h5>
+            <p>View plant details.</p>
+            <ul class="list-group list-group-flush">
+            {% for plant in room.plants %}
+              <li class="list-group-item list-group-item-success"><a href="{{ url_for('view_plant', plant_id=plant.id) }}">{{ plant.name }}</a></li>
+            {% endfor %}
+            </ul>
+          </div>
         </div>
       </div>
-      <!-- <div class="card-footer">
-        <small class="text-muted">Last watered {{ plant.water_schedule.water_date}}</small>
-      </div> -->
+    {% endfor %}
     </div>
+
   </div>
   {% endfor %}
-</div>
 
+{% else %}
+<h4>You don't have any collections yet! Add your first collection.</h4>
+{% endif %}
+ 
 {% endblock %}

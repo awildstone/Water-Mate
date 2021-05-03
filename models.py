@@ -209,7 +209,12 @@ class WaterSchedule(db.Model):
     @property
     def get_water_date(self):
         """Gets the current water_date and returns a string representation."""
-        return self.water_date.strftime("%m/%d/%Y, %H:%M:%S")
+        return self.water_date.strftime("%m/%d/%Y")
+    
+    @property
+    def get_next_water_date(self):
+        """Gets the current water_date and returns a string representation."""
+        return self.next_water_date.strftime("%m/%d/%Y")
 
 class WaterHistory(db.Model):
     """A Water History has a water date, snooze amount, notes, and a plant and water schedule id."""

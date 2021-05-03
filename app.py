@@ -602,39 +602,34 @@ def create_waterschedule(plant):
     ))
     db.session.commit()
 
-@app.route('/dashboard')
+def create_waterhistory():
+    """This is a helper method to create a Water History record for a plant that has been watered or snoozed.
+    Accepts a WaterSchedule ORM object and appends a new Water History to DB."""
+
+@app.route('/water-manager')
 @auth_required
-def dashboard():
-    """Show the user dashboard for a specific user. If the user submits a request to water or snooze a plant, the form data is posted to the respective view."""
+def water_manager():
+    """Dashboard manager for watering all plants. Plants with next_water_date equal to the current date will
+    appear here to water."""
 
     form = AddWaterHistoryNotes(meta={'csrf': False})
 
-    #plants=g.user.plants should replace with plants=plants_to_water when I am done testing
     plants = Plant.query.filter_by(user_id=g.user.id).all()
-    schedules = WaterSchedule.query.filter_by(next_water_date=datetime.today()).all()
+    schedules = WaterSchedule.query.filter(WaterSchedule.next_water_date <= datetime.today()).all()
     plant_ids = [schedule.plant_id for schedule in schedules]
     plants_to_water = [plant for plant in plants if plant.id in plant_ids]
 
-    print(plants_to_water)
+    return render_template('water_manager.html', user=g.user, plants=plants_to_water, form=form, schedules=schedules)
 
-    return render_template('/user/dashboard.html', user=g.user, plants=g.user.plants, form=form)
+@app.route('/dashboard')
+@auth_required
+def dashboard():
+    """Show the user dashboard for a specific user. Shows all Collections, Rooms, and Plants."""
 
-# I might remove this route and add water schedule details to the plant view. This route could also potentially become a route for my client side to send a POST request to trigger the solar calculator and water calculator to create a forcast and update the plant's water schedule details (and the water history table).
-# @app.route('/collection/room/plant/<int:plant_id>/water-schedule') 
-# @auth_required
-# def view_waterschedule(plant_id):
-#     """View a plant's water schedule by plant id."""
+    user = g.user
+    collections = Collection.query.filter_by(user_id=g.user.id).all()
 
-#     plant = Plant.query.get_or_404(plant_id)
-#     room = Room.query.get_or_404(plant.room_id)
-#     collection = Collection.query.get_or_404(room.collection_id)
-
-#     if g.user.id == collection.user_id:
-#         water_schedule = WaterSchedule.query.filter_by(plant_id=plant_id).first()
-#         return render_template('/schedule/view_waterschedule.html', water_schedule=water_schedule, plant=plant)
-#     else:
-#         flash('Access Denied.', 'danger')
-#         return redirect(url_for('view_plant', plant_id=plant_id))
+    return render_template('/user/dashboard.html', user=user, collections=collections)
 
 @app.route('/dashboard/<int:plant_id>/water', methods=['POST'])
 @auth_required
@@ -710,7 +705,6 @@ def snooze_plant(plant_id,):
     """Snoozes a plant's water schedule for num of days, for a specific plant id.
     Updates the plant's water schedule and water history table indicating the plant was snoozed."""
 
-    # if request.is_json:
     plant = Plant.query.get_or_404(plant_id)
 
     if g.user.id == plant.user_id:

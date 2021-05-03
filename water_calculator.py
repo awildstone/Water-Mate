@@ -120,5 +120,4 @@ class WaterCalculator:
         if new_water_interval <= 0:
             new_water_interval = 3
         
-        return new_water_interval
-        #maybe create and return a new water_schedule obj to view?        
+        return new_water_interval      

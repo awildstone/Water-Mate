@@ -11,7 +11,8 @@
 <table class="table table-striped">
     <thead>
       <tr>
-        <th scope="col">Water Date:</th>
+        <th scope="col">Watered / Snoozed:</th>
+        <th scope="col">Water Date, Time:</th>
         <th scope="col">Snoozed Days?</th>
         <th scope="col">Notes:</th>
       </tr>
@@ -19,6 +20,11 @@
     <tbody>
     {% for history in water_history %}
       <tr>
+        {% if history.snooze %}
+        <td>Snoozed</td>
+        {% else %}
+        <td>Watered</td>
+        {% endif %}
         <td>{{ history.get_water_date }}</td>
         <td>{{ history.snooze }}</td>
         <td>{{ history.notes }}</td>
