@@ -629,9 +629,9 @@ def dashboard():
     user = g.user
     collections = Collection.query.filter_by(user_id=g.user.id).all()
 
-    return render_template('/user/dashboard.html', user=user, collections=collections)
+    return render_template('/dashboard.html', user=user, collections=collections)
 
-@app.route('/dashboard/<int:plant_id>/water', methods=['POST'])
+@app.route('/water-manager/<int:plant_id>/water', methods=['POST'])
 @auth_required
 def water_plant(plant_id):
     """Waters a plant by plant id, updates the plant water schedule and updates the plant water history table."""
@@ -699,7 +699,7 @@ def water_plant(plant_id):
 
     return (jsonify({"access": "DENIED"}), 403)
 
-@app.route('/dashboard/<int:plant_id>/snooze', methods=['POST'])
+@app.route('/water-manager/<int:plant_id>/snooze', methods=['POST'])
 @auth_required
 def snooze_plant(plant_id,):
     """Snoozes a plant's water schedule for num of days, for a specific plant id.
@@ -745,6 +745,7 @@ def edit_waterschedule(plant_id):
         if form.validate_on_submit():
             water_schedule.manual_mode = form.manual_mode.data
             water_schedule.water_interval = form.water_interval.data
+            #Should possibly update the water date and the next water date? Or just the next water date.
             db.session.commit()
             flash('Water Schedule updated.', 'success')
             return redirect(url_for('view_plant', plant_id=plant_id))

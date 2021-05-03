@@ -5,10 +5,10 @@
 {% block content %}
 
 <h1>Dashboard</h1>
-<p>Welcome to the dashboard, {{ user.name }}!</p>
-<p><a href="{{ url_for('add_collection') }}" class="btn btn-success">Add a Collection</a></p>
 
 {% if collections %}
+<p>Welcome to the dashboard, {{ user.name }}. Here is a bird's eye view of your collection(s).</p>
+<p><a href="{{ url_for('add_collection') }}" class="btn btn-success">Add a Collection</a></p>
 
   {% for collection in collections %}
     <div class="card col bg-light m-4">
@@ -33,6 +33,7 @@
           <div class="card-body list-group-item-secondary">
             <h5>Light Sources</h5>
             <p>View plants using this lightsource.</p>
+            <p><a href="{{ url_for('add_lightsource', room_id=room.id) }}" class="card-link btn btn-success btn-sm">Add Light</a></p>
             {% for light in room.lightsources %}
               <a href="{{ url_for('view_lightsource_plants', lightsource_id=light.id)}}" class="card-link">{{ light.type }}</a>
             {% endfor %}
@@ -40,6 +41,7 @@
           <div class="card-body list-group-item-success">
             <h5>Plants</h5>
             <p>View plant details.</p>
+            <p>{% if room.lightsources %}<a href="{{ url_for('add_plant', room_id=room.id) }}" class="card-link btn btn-success btn-sm">Add Plant</a>{% endif %}</p>
             <ul class="list-group list-group-flush">
             {% for plant in room.plants %}
               <li class="list-group-item list-group-item-success"><a href="{{ url_for('view_plant', plant_id=plant.id) }}">{{ plant.name }}</a></li>
@@ -56,6 +58,7 @@
 
 {% else %}
 <h4>You don't have any collections yet! Add your first collection.</h4>
+<p><a href="{{ url_for('add_collection') }}" class="btn btn-success">Add a Collection</a></p>
 {% endif %}
  
 {% endblock %}

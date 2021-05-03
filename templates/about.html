@@ -4,10 +4,39 @@
 
 {% block content %}
 
-<h1>About Water Mate</h1>
+<h1>About <i class="fab fa-pagelines">Water Mate</i></h1>
 
-<p>Learn about Water Mate.</p>
+<img class="rounded" src="/static/img/plant_collection.png" width="400">
 
-<p><img src="/static/img/plant_collection.png" width="500"></p>
+<div class="container text-left">
+<h3>The need for better plant care</h3>
+<p>Like many plant collectors, I quickly found myself overwhelmed by the number of plants I somehow came home with <i class="far fa-smile-wink"></i> and found myself struggling to keep track of the care routines each plant needs. This lead to many wilted plants crying for attention (fittonias anyone??). With the growing season fast approaching in the PNW, I needed a solution that could help me organize my plant collection in my home, help me keep track of the health of my plant, and help remind me when its time to water my plant.</p>
+
+<br><h3>How Water Mate works</h3>
+<p>I want Water Mate to be helpful for plant collectors around the world, so I designed an algorithm that takes a user's location on earth to calculate a water schedule for a plant. A solar forcast that is unique to the user's location and the time of year is used to calculate a watering schedule for a plant with consideration of the plant's type and the care and light requirements that plant needs (and recieves) in the user's home.</p>
+
+<p>The algorithm uses the solar forcast to account for changes and adjust the watering schedule for a plant. Changes such as seasonal (transitioning from winter to the summer growing season) or even moving your plant's location in your home (changing its lightsource). The algorithm also considers less than optimal conditions based on the plant's type and adjusts accordingly.</p>
+
+<p>From there, Water Mate calculates the next water date for your plant then reminds you when its time to water in the Water Manager view. In the Water Manager, user's can Water their plant, or (if the soil is still damp to the touch) Snooze the plant's watering schedule for 3 days. User's can add notes about the plant for the Water or Snooze event (such as the condition of the plant, or why the water schedule was snoozed).</p>
+
+<br><h3>User's have control over how their collection is organized</h3>
+<ul class="list-group">
+    <li class="list-group-item">Users can see a bird's eye view of their Collection(s) in the Dashboard where the details can be viewed, edited, or deleted.</li>
+    <li class="list-group-item">Users can organize their plants into Collection(s) [like Home or Work].</li>
+    <li class="list-group-item">Inside a user's collection are Rooms [like Bedroom or Kitchen], Lightsources [like Artifical lights, South, or East window], and Plants!</li>
+    <li class="list-group-item">Users add Rooms to their Collection, select the Lightsources available in the Room, then add their Plant to the room [selecting the plant's type and lightsource on creation].</li>
+    <li class="list-group-item">Users can manage the details about their Plant in the Plant view/dashboard. There they can add photos of the plant, move the plant's location or Lightsource, view the plant's watering schedule, or view the full history of the plant's care.</li>
+    <li class="list-group-item">Users can even set a manual water schedule for a plant [for cases when a plant needs extra attention, or the plant's environment is fully controlled with artificial light].</li>
+</ul>
+
+<br><h3>Interested in contributing?</h3>
+<p>Water Mate is my first Capstone project as part of my Software Engineer training at <a href="https://www.springboard.com/courses/software-engineering-career-track/">Springboard</a>. I'm learning about building apps and welcome any questions, suggestions for improvement, and if you are a developer who is also passionate about plant care I would love to work with you! You can check out the full code repository on my Github account and see details for how you can contribute.</p>
+
+<div class="text-center m-3">
+<h4><i class="fab fa-pagelines"><a href="https://github.com/awildstone/Water-Mate">Water Mate</a></i></h4>
+<a href="https://github.com/awildstone/Water-Mate"><img class="rounded" src="/static/img/water_mate.png" width="200"></a>
+</div>
+
+</div>
 
 {% endblock %}

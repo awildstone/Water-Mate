@@ -5,11 +5,9 @@
 {% block content %}
 
 <h1><i class="fab fa-pagelines">Water Mate</i></h1>
+<img class="rounded" src="/static/img/water_mate.png" width="400">
 
-<p>Welcome to Water Mate!</p>
-<br><img src="/static/img/water_mate.png" width="400">
-
-<p>Read <a href="{{ url_for('about') }}">about</a> this app.</p>
-<p><a href="{{ url_for('get_location') }}">Create an account</a> or <a href="{{ url_for('login') }}">Log in</a>.</p>
+<p><h4>Read <a href="{{ url_for('about') }}">about</a> this app.</h4></p>
+<p><h4><a href="{{ url_for('get_location') }}">Create an account</a> or <a href="{{ url_for('login') }}">Log in</a>.</h4></p>
 
 {% endblock %}
