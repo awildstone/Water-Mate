@@ -218,7 +218,7 @@ def edit_password():
     if form.validate():
         if User.changePassword(g.user, form.current_password.data, form.new_password.data):
             db.session.commit()
-            
+
             flash('Password updated!', 'success')
             return redirect(url_for('view_profile'))
 
@@ -226,7 +226,29 @@ def edit_password():
 
     return render_template('/user/edit_password.html', form=form)
 
-#edit user location route
+@app.route('/profile/edit-location', methods=['GET', 'POST'])
+@auth_required
+def edit_location():
+    """ Edit a user's geolocation."""
+
+    form = EditLocationForm()
+
+    if form.validate_on_submit():
+        user_location = UserLocation(city=form.city.data, state=form.state.data, country=form.country.data)
+        coordinates = user_location.get_coordinates()
+
+        if coordinates:
+            g.user.latitude = coordinates['lat']
+            g.user.longitude=coordinates['lng']
+
+            db.session.commit()
+            flash('Geolocation is updated.', 'success')
+            return redirect(url_for('view_profile'))
+
+        flash('There was an error fetching your geolocation. Please check the spelling of your City or State/Country and try again.', 'warning')
+
+    return render_template('/user/edit_location.html', form=form)
+
 #delete user account route
 
 ####################

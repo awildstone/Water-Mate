@@ -1,0 +1,29 @@
+{% extends 'base.html'  %}
+
+{% block title %}Edit Your Location{% endblock %}
+
+{% block content %}
+
+<h1>Edit Your Location</h1>
+
+<p>Use this form to update your profile's geolocation coordinates. All fields are required to calculate an accurate geolocation.
+<p><span class="text-danger">WARNING</span>: this will change how Water Mate calculates the water schedule for all of your plants.</p>
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+
+    {% for field in form if field.widget.input_type != 'hidden' %}
+    <div class="mb-3">
+      {{ field.label }}
+      {{ field(class_="form-control") }}
+      {% for error in field.errors %}
+      <small class="form-text text-danger">{{ error }}</small>
+      {% endfor %}
+    </div>
+    {% endfor %}
+ 
+    <a href="{{ url_for('view_profile') }}" class="btn btn-secondary m-2">Cancel</a>
+    <button class="btn btn-success m-2" type="submit">Update Location</button>
+  </form>
+
+{% endblock %}
