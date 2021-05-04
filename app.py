@@ -261,7 +261,7 @@ def delete_profile():
         for plant in user_plants:
             db.session.delete(plant)
             db.session.commit()
-            
+
         #try to delete the user
         db.session.delete(g.user)
         db.session.commit()
@@ -646,8 +646,15 @@ def edit_plant(plant_id):
             plant.name = form.name.data
             plant.type_id = form.plant_type.data.id
             plant.light_id = form.light_source.data.id
-
             db.session.commit()
+
+            #reset the plant's water_schedule to reflect any changes in type or location but do not change the last water date.
+            water_schedule = WaterSchedule.query.get_or_404(plant.id)
+            plant_type = PlantType.query.get_or_404(plant.type_id)
+            water_schedule.water_interval = plant_type.base_water
+            water_schedule.next_water_date = water_schedule.water_date + timedelta(days=plant_type.base_water)
+            db.session.commit()
+
             flash(f'{plant.name} updated!', 'success')
             return redirect(url_for('view_plant', plant_id=plant.id))
     else:
@@ -692,15 +699,11 @@ def create_waterschedule(plant):
     ))
     db.session.commit()
 
-def create_waterhistory():
-    """This is a helper method to create a Water History record for a plant that has been watered or snoozed.
-    Accepts a WaterSchedule ORM object and appends a new Water History to DB."""
-
 @app.route('/water-manager')
 @auth_required
 def water_manager():
-    """Dashboard manager for watering all plants. Plants with next_water_date equal to the current date will
-    appear here to water."""
+    """Task manager for watering all plants. Plants with next_water_date less than or equal to the current date will
+    appear here to water or snooze."""
 
     form = AddWaterHistoryNotes(meta={'csrf': False})
 
@@ -714,7 +717,7 @@ def water_manager():
 @app.route('/dashboard')
 @auth_required
 def dashboard():
-    """Show the user dashboard for a specific user. Shows all Collections, Rooms, and Plants."""
+    """Show the user dashboard for a specific user. Shows all Collections, Rooms, LightSources and Plants."""
 
     user = g.user
     collections = Collection.query.filter_by(user_id=g.user.id).all()
