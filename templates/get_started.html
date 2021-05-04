@@ -32,6 +32,17 @@
     <p>Make sure that you water your plant the same day you added it to the schedule.</p></li>
 </ul>
 
+<br><h3>Using the Water Manager</h3>
+<p>The <a href="{{ url_for('water_manager') }}">Water Manager</a> is your task view for watering your plants, snoozing the plant water schedule, and adding notes about the event (if applicable). Plants that are ready for care will appear in this view and remain in the view until they are Watered or Snoozed.</p>
+
+<p>Adding notes to your water event is helpful for tracking details such as the overal health of the plant during this check, or any other notes (such as pest prevention treatment or fertilization). Notes added will be available to view in the plant's water history view.</p>
+
+<p>Clicking Water will update the plant's water schedule, generate a solar forcast using the water calculation algorithm and set the next water date in the plant's water schedule.</p>
+
+<p><b>**If the plant's water schedule is set to manual, clicking Water will not generate a solar forcast and instead use the water interval manually set by the user.</b></p>
+
+<p>Clicking Snooze will update the plant's water schedule next water date to check the plant again in 3 days, regardless of manual or automatic settings.</p>
+
 <br><h3>Managing your plant's care routine</h3>
 <p>From anywhere in the app you can click on a plant's name to view the plant's details page.</p>
 
@@ -40,15 +51,6 @@
 <p>You can edit the plant's details such as the name, type, or photo. Change the plant's location or lightsource, and even set a manual water schedule to control the exact number of days between watering that you want (for controlled environments).</p>
 
 <p>If your plant dies you can delete it from the app <i class="far fa-sad-cry"></i>, but its reccommended that you review the water history table to see if you can understand why it may have died.</p>
-
-<br><h3>Using the Water Manager</h3>
-<p>The <a href="{{ url_for('water_manager') }}">Water Manager</a> is your task view for watering your plants, snoozing the schedule, and adding notes about the event (if applicable). Plants that are ready for care will appear in this view and remain in the view until they are Watered or Snoozed.</p>
-
-<p>Adding notes to your water event is helpful for tracking details such as the overal health of the plant during this check, or any other notes (such as pest prevention treatment or fertilization). Notes added will be available to view in the plant's water history view.</p>
-
-<p>Clicking Water will update the plant's water schedule, generate a solar forcast using the water calculation algorithm and set the next water date in the plant's water schedule.</p>
-
-<p>Clicking Snooze will update the plant's water schedule to check the plant again in 3 days.</p>
 
 <br><h3>Tips for success</h3>
 <ul class="list-group">

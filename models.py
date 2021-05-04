@@ -30,8 +30,7 @@ class Collection(db.Model):
     name = db.Column(db.Text, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='cascade'))
 
-    rooms = db.relationship('Room', backref='collection')
-
+    rooms = db.relationship('Room', backref='collection', cascade='all, delete-orphan')
 
 class Room(db.Model):
     """A Room has a name, a collection id, and holds plants and lightsources."""
@@ -42,8 +41,9 @@ class Room(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False)
     collection_id = db.Column(db.Integer, db.ForeignKey('collections.id', ondelete='cascade'), nullable=False)
+
     plants = db.relationship('Plant', backref='room')
-    lightsources = db.relationship('LightSource', backref='room')
+    lightsources = db.relationship('LightSource', backref='room', cascade='all, delete-orphan')
 
 ####################
 # User Model
@@ -65,7 +65,7 @@ class User(db.Model):
     username = db.Column(db.Text, unique=True, nullable=False)
     password = db.Column(db.Text, nullable=False)
 
-    collections = db.relationship('Collection', backref='user')
+    collections = db.relationship('Collection', backref='user', cascade='all, delete-orphan')
     plants = db.relationship('Plant')
 
     def __repr__(self):
@@ -123,7 +123,6 @@ class User(db.Model):
         if is_auth:
             new_hashed_pwd = bcrypt.generate_password_hash(new_password).decode('UTF-8')
             user.password = new_hashed_pwd
-            #pass user back to route to commit the session changes
             return user
         return False
 
@@ -150,9 +149,7 @@ class LightSource(db.Model):
     type = db.Column(db.Text, db.ForeignKey('light_types.type'), nullable=False)
     type_id = db.Column(db.Integer, db.ForeignKey('light_types.id'), nullable=False)
     daily_total = db.Column(db.Integer, nullable=False, default=8) #default is 8 for cases where artificial light source is used
-    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id', ondelete='cascade')) #delete light source if room is deleted
-
-    # plants = db.relationship('Plant', backref='light')
+    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id', ondelete='cascade'))
 
 ####################
 # Plant Models
@@ -185,7 +182,7 @@ class Plant(db.Model):
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'), nullable=False)
     light_id = db.Column(db.Integer, db.ForeignKey('light_sources.id'), nullable=False)
 
-    water_schedule = db.relationship('WaterSchedule', backref='plant', cascade="all, delete-orphan")
+    water_schedule = db.relationship('WaterSchedule', backref='plant', cascade='all, delete-orphan')
     light = db.relationship('LightSource', backref='plant')
 
 ####################
@@ -202,9 +199,9 @@ class WaterSchedule(db.Model):
     next_water_date = db.Column(db.DateTime, nullable=False)
     water_interval = db.Column(db.Integer, nullable=False)
     manual_mode = db.Column(db.Boolean, nullable=False, default=False)
-    plant_id = db.Column(db.Integer, db.ForeignKey('plants.id', ondelete='cascade'), nullable=False) #if plant is deleted, delete schedule
+    plant_id = db.Column(db.Integer, db.ForeignKey('plants.id', ondelete='cascade'), nullable=False)
 
-    water_history = db.relationship('WaterHistory', backref='water_schedule', cascade="all, delete-orphan")
+    water_history = db.relationship('WaterHistory', backref='water_schedule', cascade='all, delete-orphan')
 
     @property
     def get_water_date(self):
@@ -226,7 +223,7 @@ class WaterHistory(db.Model):
     snooze = db.Column(db.Integer)
     notes = db.Column(db.String(200), nullable=False, default='No notes added.')
     plant_id = db.Column(db.Integer, db.ForeignKey('plants.id'), nullable=False)
-    water_schedule_id = db.Column(db.Integer, db.ForeignKey('water_schedules.id', ondelete='cascade'), nullable=False) #if water_schedule is deleted, delete history
+    water_schedule_id = db.Column(db.Integer, db.ForeignKey('water_schedules.id', ondelete='cascade'), nullable=False)
 
     @property
     def get_water_date(self):

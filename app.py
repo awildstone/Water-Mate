@@ -1,6 +1,7 @@
 """Flask App for Water Mate."""
 
 import os
+import shutil
 from flask import Flask, render_template, request, json, jsonify, flash, redirect, session, g, url_for, send_from_directory
 from flask_debugtoolbar import DebugToolbarExtension #keep only for development
 from sqlalchemy.exc import IntegrityError
@@ -229,7 +230,7 @@ def edit_password():
 @app.route('/profile/edit-location', methods=['GET', 'POST'])
 @auth_required
 def edit_location():
-    """ Edit a user's geolocation."""
+    """Edit a user's geolocation."""
 
     form = EditLocationForm()
 
@@ -249,7 +250,35 @@ def edit_location():
 
     return render_template('/user/edit_location.html', form=form)
 
-#delete user account route
+@app.route('/profile/delete', methods=['POST'])
+@auth_required
+def delete_profile():
+    """Delete a user's account and all data."""
+    #Try to delete the user, if there is a problem tell the user why.
+    try:
+        #first we have to delete all plants
+        user_plants = Plant.query.filter_by(user_id=g.user.id).all()
+        for plant in user_plants:
+            db.session.delete(plant)
+            db.session.commit()
+            
+        #try to delete the user
+        db.session.delete(g.user)
+        db.session.commit()
+
+        #delete user's uploads folder & files
+        shutil.rmtree(f'{UPLOAD_FOLDER}/{g.user.id}')
+
+        #delete user session
+        if CURRENT_USER_KEY in session:
+            del session[CURRENT_USER_KEY]
+        
+        flash('Account Deleted.', 'info')
+        return redirect(url_for('homepage'))
+
+    except IntegrityError:
+        flash('There was a problem deleting your account.', 'warning')
+        return redirect(url_for('dashboard'))
 
 ####################
 # Collection Routes
