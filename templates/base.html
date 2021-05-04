@@ -17,7 +17,7 @@
             <li class="nav-item"><a class="nav-link pr-3 text-light" href="{{ url_for('get_started') }}">Get Started</a></li>
             <li class="nav-item"><a class="nav-link pr-3 text-light" href="{{ url_for('dashboard') }}">Dashboard</a></li>
             <li class="nav-item"><a class="nav-link pr-3 text-light" href="{{ url_for('water_manager') }}">Water Manager</a></li>
-            <!-- <li class="nav-item"><a class="nav-link pr-3 text-light" href="{{ url_for('show_collections') }}">Collections</a></li> -->
+            <li class="nav-item"><a class="nav-link pr-3 text-light" href="{{ url_for('view_profile') }}">{{ g.user.username }}</a></li>
             <li class="nav-item"><a class="nav-link pr-3 text-light" href="{{ url_for('logout') }}">Logout</a></li>
             {% endif %}
             {% if not g.user %}

@@ -10,13 +10,6 @@ from flask_wtf.file import FileField, FileAllowed
 # Forms
 ####################
 
-# class LocationForm(FlaskForm):
-#     """Form for user to set their location."""
-
-#     city = StringField('City', validators=[InputRequired(message='You must enter your city for an accurate location.')])
-#     state = StringField('State/Territory', validators=[InputRequired(message='You must enter your state/territory for an accurate location.')])
-#     country = StringField('Country', validators=[InputRequired(message='You must enter your country for an accurate location.')])
-
 class SignupForm(FlaskForm):
     """Form to sign up a new user."""
 
@@ -31,7 +24,7 @@ class SignupForm(FlaskForm):
 class LoginForm(FlaskForm):
     """Form to login an existing user."""
 
-    username = StringField('Name', validators=[InputRequired(message='You must enter your username.')])
+    username = StringField('Username', validators=[InputRequired(message='You must enter your username.')])
     password = PasswordField('Password', validators=[Length(min=6, message='Your password must be greater than 6 characters.')])
 
 ####################
@@ -76,17 +69,17 @@ class AddPlantForm(FlaskForm):
 ####################
 
 class EditLocationForm(FlaskForm):
-    """Form to edit a user's location."""
+    """Form for user to edit their location."""
 
     city = StringField('City', validators=[InputRequired(message='You must enter your city for an accurate location.')])
-    state = StringField('State', validators=[InputRequired(message='You must enter your state for an accurate location.')])
-    zipcode = StringField('Zipcode (Optional)')
-
+    state = StringField('State/Territory', validators=[InputRequired(message='You must enter your state/territory for an accurate location.')])
+    country = StringField('Country', validators=[InputRequired(message='You must enter your country for an accurate location.')])
 
 class EditUserProfileForm(FlaskForm):
     """For to edit a user's profile."""
 
     name = StringField('Name', validators=[InputRequired(message='You must enter your name.')])
+    username = StringField('Username', validators=[InputRequired(message='You must enter your username.')])
     email = StringField('E-mail', validators=[InputRequired(message='You must enter your email.'), Email(message='You must enter a valid email.')])
     password = PasswordField('Password', validators=[InputRequired(message='You must enter your password.')])
 

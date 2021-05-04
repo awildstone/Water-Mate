@@ -94,11 +94,12 @@ def about():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    """Signup a new user."""
+    """Get a user's geolocation and signup a new user."""
 
     form = SignupForm()
 
     if form.validate_on_submit():
+        #get the user's geolocation
         user_location = UserLocation(city=form.city.data, state=form.state.data, country=form.country.data)
         coordinates = user_location.get_coordinates()
 
@@ -171,9 +172,61 @@ def get_started():
     """Show getting started page."""
     return render_template('get_started.html')
 
-#view user profile route
-#edit user profile route
-#edit user password route
+@app.route('/profile')
+@auth_required
+def view_profile():
+    """Show a user's profile details."""
+
+    user = User.query.get_or_404(g.user.id)
+
+    return render_template('/user/profile.html', user=user)
+
+@app.route('/profile/edit', methods=['GET', 'POST'])
+@auth_required
+def edit_profile():
+    """Edit a user's profile information."""
+
+    form = EditUserProfileForm(obj=g.user)
+
+    if form.validate_on_submit():
+        if User.authenticate(g.user.username, form.password.data):
+            try:
+                user = User.query.get_or_404(g.user.id)
+                user.name = form.name.data
+                user.username = form.username.data
+                user.email = form.email.data
+
+                db.session.commit()
+                flash('Profile updated!', 'success')
+                return redirect(url_for('view_profile'))
+
+            except IntegrityError:
+                db.session.rollback()
+                flash('That username is already taken!', 'warning')
+
+        form.password.errors.append('Wrong password, please try again.')
+
+    return render_template('/user/edit.html', user=g.user, form=form)
+
+@app.route('/profile/edit-password', methods=['GET', 'POST'])
+@auth_required
+def edit_password():
+    """Edit a user's password."""
+
+    form = ChangePasswordForm(obj=g.user)
+
+    if form.validate():
+        if User.changePassword(g.user, form.current_password.data, form.new_password.data):
+            db.session.commit()
+            
+            flash('Password updated!', 'success')
+            return redirect(url_for('view_profile'))
+
+        form.current_password.errors.append('Wrong current password, please try again.')
+
+    return render_template('/user/edit_password.html', form=form)
+
+#edit user location route
 #delete user account route
 
 ####################

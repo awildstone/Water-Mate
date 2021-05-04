@@ -1,0 +1,36 @@
+{% extends 'base.html'  %}
+
+{% block title %}Edit {{ user.name }}'s Profile{% endblock %}
+
+{% block content %}
+
+<h1>Edit {{ user.name }}'s Profile</h1>
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+    {% for field in form if field.widget.input_type != 'hidden' and field.name != 'password' %}
+    <div class="mb-3">
+      {{ field.label }}
+      {{ field(class_="form-control") }}
+      {% for error in field.errors %}
+      <small class="form-text text-danger">{{ error }}</small>
+      {% endfor %}
+    </div>
+    {% endfor %}
+
+    <p>Enter your password to confirm changes:</p>
+    {% if form.password.errors %}
+      {% for error in form.password.errors %}
+        <span class="text-danger">
+        {{ error }}
+      </span>
+      {% endfor %}
+    {% endif %}
+    {{ form.password(placeholder="Enter your password to confirm", class="form-control") }}
+
+    <a href="{{ url_for('view_profile') }}" class="btn btn-secondary m-2">Cancel</a>
+    <button class="btn btn-success m-2" type="submit">Update Profile</button>
+  </form>
+
+
+{% endblock %}

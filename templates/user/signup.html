@@ -6,10 +6,9 @@
 
 <h1>Signup</h1>
 
-<p>Please enter your City, State/Territory, and Country so we can calculate your geolocation.</p>
-<p>Please enter your name, email, username, and password. All fields are required.</p>
+<p>Please enter your City, State/Territory, and Country so we can calculate your geolocation. All fields are required to create a new account.</p>
 
-<form method="POST">
+<form class="m-5" method="POST">
     {{ form.hidden_tag() }}
     {% for field in form if field.widget.input_type != 'hidden' %}
     <div class="mb-3">
