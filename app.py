@@ -744,8 +744,8 @@ def edit_waterschedule(plant_id):
     if g.user.id == collection.user_id:
         if form.validate_on_submit():
             water_schedule.manual_mode = form.manual_mode.data
-            water_schedule.water_interval = form.water_interval.data
-            #Should possibly update the water date and the next water date? Or just the next water date.
+            water_schedule.water_interval = int(form.water_interval.data)
+            water_schedule.next_water_date = water_schedule.water_date + timedelta(days=water_schedule.water_interval)
             db.session.commit()
             flash('Water Schedule updated.', 'success')
             return redirect(url_for('view_plant', plant_id=plant_id))
