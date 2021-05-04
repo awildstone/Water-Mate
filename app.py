@@ -93,56 +93,42 @@ def about():
 ####################
 
 @app.route('/signup', methods=['GET', 'POST'])
-def get_location():
-    """Get a new user's location."""
-
-    form = LocationForm()
-
-    if form.validate_on_submit():
-
-        user_location = UserLocation(city=form.city.data, state=form.state.data, country=form.country.data)
-        coordinates = user_location.get_coordinates()
-
-        if coordinates:
-            session['location'] = coordinates
-            return redirect(url_for('signup'))
-        else:
-            flash('There was an error fetching your geolocation. Please check the spelling of your City or State/Country and try again.', 'warning')
-
-    return render_template('/user/location.html', form=form)
-
-@app.route('/signup-user', methods=['GET', 'POST'])
 def signup():
     """Signup a new user."""
 
     form = SignupForm()
-    coords = session['location']
 
     if form.validate_on_submit():
-        try:
-            new_user = User.signup(
-                name=form.name.data,
-                email=form.email.data,
-                latitude=coords['lat'],
-                longitude=coords['lng'],
-                username=form.username.data,
-                password=form.password.data
+        user_location = UserLocation(city=form.city.data, state=form.state.data, country=form.country.data)
+        coordinates = user_location.get_coordinates()
+
+        if coordinates:
+            #coordinates are valid, create a new user
+            try:
+                new_user = User.signup(
+                    name=form.name.data,
+                    email=form.email.data,
+                    latitude=coordinates['lat'],
+                    longitude=coordinates['lng'],
+                    username=form.username.data,
+                    password=form.password.data
                 )
-            db.session.commit()
+                db.session.commit()
 
-        except IntegrityError:
-            flash('There was an error creating your account.', 'warning')
-            return render_template('/user/signup.html', form=form)
-        
-        #create an uploads file directory for this user
-        os.makedirs(f'{UPLOAD_FOLDER}/{new_user.id}')
-        #add the new user to session
-        session[CURRENT_USER_KEY] = new_user.id
-        #remove the location from the session, this is stored in the user table now.
-        del session['location']
+                #create an uploads file directory for this user
+                os.makedirs(f'{UPLOAD_FOLDER}/{new_user.id}')
+                #add the new user to session
+                session[CURRENT_USER_KEY] = new_user.id
 
-        flash(f'Welcome to Water Mate, {new_user.name}!', 'success')
-        return redirect(url_for('get_started'))
+                flash(f'Welcome to Water Mate, {new_user.name}!', 'success')
+                return redirect(url_for('get_started'))
+
+            except IntegrityError:
+                flash('There was an error creating your account because the username was already taken. Please choose a different username.', 'warning')
+                return render_template('/user/signup.html', form=form)
+        else:
+            flash('There was an error fetching your geolocation. Please check the spelling of your City or State/Country and try again.', 'warning')
+            return redirect(url_for('signup'))
 
     return render_template('/user/signup.html', form=form)
 
@@ -158,7 +144,7 @@ def login():
         if user:
             session[CURRENT_USER_KEY] = user.id
             flash(f'Welcome back, {user.name}!', 'success')
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('water_manager'))
         
         flash('Invalid login credentials!', 'danger')
 

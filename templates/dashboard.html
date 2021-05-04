@@ -12,7 +12,7 @@
 
   {% for collection in collections %}
     <div class="card col bg-light m-4">
-      <h2 class="m-3" style="display: inline;">{{ collection.name }} Collection</h2>
+      <h2 class="m-3" style="display: inline;"><a href="{{ url_for('view_collection', collection_id=collection.id) }}">{{ collection.name }} Collection</a></h2>
     <div class="col">
       <a href="{{ url_for('add_room', collection_id=collection.id) }}" class="card-link btn btn-success">Add Room</a>
       <a href="{{ url_for('edit_collection', collection_id=collection.id) }}" class="card-link btn btn-warning m-2">Edit {{ collection.name }}</a>

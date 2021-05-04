@@ -19,7 +19,6 @@ class UserLocation:
         #Our target accuracy level is A5 (City level): https://developer.mapquest.com/documentation/geocoding-api/quality-codes/
         #In order for the geocode pinpoint to meet criteria, the geocodeQualityCode must contain "A5", 
         # otherwise we will return an error message to the user to try again.
-        print(response.json()['results'][0]['locations'][0]['geocodeQualityCode'])
 
         if 'A5' in response.json()['results'][0]['locations'][0]['geocodeQualityCode']:
             return(response.json()['results'][0]['locations'][0]['latLng'])
