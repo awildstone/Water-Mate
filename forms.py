@@ -72,8 +72,8 @@ class EditLocationForm(FlaskForm):
     """Form for user to edit a user's location."""
 
     city = StringField('City', validators=[InputRequired(message='You must enter your city for an accurate location.')])
-    state = StringField('State/Territory', validators=[InputRequired(message='You must enter your state/territory for an accurate location.')])
-    country = StringField('Country', validators=[InputRequired(message='You must enter your country for an accurate location.')])
+    state = StringField('State/Territory')
+    country = StringField('Country')
 
 class EditUserProfileForm(FlaskForm):
     """For to edit a user's profile."""

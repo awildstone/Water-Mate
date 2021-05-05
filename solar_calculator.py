@@ -2,9 +2,13 @@
 
 import requests, json
 from datetime import date, datetime, timedelta, timezone
-from dateutil import tz
+# from dateutil import tz
+# import pytz
+from tzlocal import get_localzone
+from zoneinfo import ZoneInfo
 
 BASE_URL = 'https://api.sunrise-sunset.org/json'
+# ALL_TIMEZONES = set(pytz.all_timezones_set)
 
 class SolarCalculator:
     """A class to get the solar forcast calculations based on a user' location,
@@ -33,30 +37,62 @@ class SolarCalculator:
         date_time_str = date.strftime('%Y-%m-%d') + ' ' + time
 
         return datetime.strptime(date_time_str, '%Y-%m-%d %H:%M:%S')
+    
+    def convert_12_to_24(self, string):
+        """Accepts a string, evaluates the string and converts from 12 hour to 24 hour time.
+        Solution found here: https://www.geeksforgeeks.org/python-program-convert-time-12-hour-24-hour-format/."""
 
-    def convert_UTC__to_localtime(self, date, time):
-        """Builds a UTC datetime object then converts UTC time to local time. 
-        Returns localtime datetime object.
-        Found solution on https://stackoverflow.com/questions/4770297/convert-utc-datetime-string-to-local-datetime ."""
+        #Check if last two elements of time is AM and first two elements are 12
+        if string[-2:] == 'AM' and string[:2] == '12':
+            return '00' + string[2:-2]
+          
+        #remove the AM    
+        if string[-2:] == 'AM':
+            return string[:-3]
+      
+        #Check if last two elements of time is PM and first two elements are 12   
+        if string[-2:] == 'PM' and string[:2] == '12':
+            return string[:-3]
+          
+        else:
+            #add 12 to hours and remove PM
+            return str(int(string[:2]) + 12) + string[2:8]
 
-        from_zone = tz.tzutc()
-        to_zone = tz.tzlocal()
+    def convert_UTC_to_localtime(self, date, time):
+        """Accepts a UTC datetime object and a 12-hour formatted string in UTC time. Converts UTC time to local time then
+        returns a newly formatted localtime datetime object.
+        Found solution on https://stackoverflow.com/questions/4770297/convert-utc-datetime-string-to-local-datetime 
+        and https://howchoo.com/g/ywi5m2vkodk/working-with-datetime-objects-and-timezones-in-python."""
+
+        converted_time = None
+
+        if time[1] == ':':
+            length = len(time)
+            new_time = time.zfill(length + 1)
+            converted_time = self.convert_12_to_24(new_time)
+        else:
+            converted_time = self.convert_12_to_24(time)
+
+        from_zone = ZoneInfo('UTC')
+        to_zone = get_localzone()
 
         #build a utc formatted string from API response string
-        utc_date_time_str = date.strftime('%Y-%m-%d') + ' ' + time[:-3]
+        utc_date_time_str = date.strftime('%Y-%m-%d') + ' ' + converted_time
         #parse string into datetime obj
-        utc = datetime.strptime(utc_date_time_str, '%Y-%m-%d %H:%M:%S')
-        #set timezone to UTC
-        utc = utc.replace(tzinfo=from_zone)
-        #update timezone/time to localtime
-        local = utc.astimezone(to_zone)
+        utc_date_time = datetime.strptime(utc_date_time_str, '%Y-%m-%d %H:%M:%S')
+        #set datetime obj timezone to UTC
+        utc_date_time = utc_date_time.replace(tzinfo=from_zone)
+        #convert the datetime UTC object to local date/time
+        local_date_time = utc_date_time.astimezone(to_zone)
 
-        return local
+        return local_date_time
 
     def get_data(self, day):
         """Calls the Sunset and sunrise times API for a given date with the user_location.
         Returns the JSON data in dict for this date/location.
-        {"date": date, "sunrise": sunrise, "sunset": sunset, "day_length": day_length, "solar_noon": solar_noon}."""
+        {"date": date, "sunrise": sunrise, "sunset": sunset, "day_length": day_length, "solar_noon": solar_noon}.
+        
+        Currently, this only supports conversions from UTC to timezones between UTC -5 to UTC -11."""
 
         response = requests.get(BASE_URL, params={
             'lat': self.user_location['latitude'], 
@@ -64,12 +100,23 @@ class SolarCalculator:
             'date': day})
         
         results = response.json()['results']
-        
+
+        # print('################### LOCAL DATE ###################')
+        # print(day)
+        # print('################### SUNRISE ###################')
+        # print(results['sunrise'])
+        # print('################### SUNSET ###################')
+        # print(results['sunset'])
+        # print('################### SOLAR NOON ###################')
+        # print(results['solar_noon'])
+        # print('################### DAY LENGTH ###################')
+        # print(results['day_length'])
+
         if response.json()['status'] == 'OK':
             return {'date': day, 
-            'sunrise': self.convert_UTC__to_localtime(day, results['sunrise']), 
-            'sunset': self.convert_UTC__to_localtime(day, results['sunset']), 
-            'solar_noon': self.convert_UTC__to_localtime(day, results['solar_noon']),
+            'sunrise': self.convert_UTC_to_localtime(day, results['sunrise']), 
+            'sunset': self.convert_UTC_to_localtime(day + timedelta(days=1), results['sunset']), #adding 1 day to account that the morning in UTC time falls in the evening of the previous day in Pacific Time (PST/PDT). I have some work to do to support different timezones but for now this works for timezones between UTC -5 to UTC -11.
+            'solar_noon': self.convert_UTC_to_localtime(day, results['solar_noon']), #add 12 hours to convert results from 12 hour time to 24 hour time.
             'day_length': self.convert_str_to_datetime(day, results['day_length'])}
 
     def get_solar_schedule(self):
@@ -93,9 +140,9 @@ class SolarCalculator:
         Returns the fraction of the duration of time."""
 
         duration_of_time = datetime.combine(date.min, time) - datetime.min
-        fraction_of__total_time = duration_of_time * fraction
+        fraction_of_total_time = duration_of_time * fraction
 
-        return fraction_of__total_time
+        return fraction_of_total_time
 
     def get_daily_sunlight(self):
         """Calculates the maximum amount of light that a light_type can recieve given the user location, the date, and the type of light source. Uses data from the solar forecast to calculate the maximum sunlight potential for each day.
@@ -144,49 +191,3 @@ class SolarCalculator:
             
         return plant_max_daily_light
 
-
-# #here for testing
-# def convert_time_delta_float(time_delta):
-#     seconds = time_delta.seconds
-#     microseconds = time_delta.microseconds
-
-#     return (microseconds / 1000000 + seconds / 60) / 60
-
-
-# test = SolarCalculator(user_location={"latitude": "47.466748", "longitude": "-122.34722"}, current_date=datetime.today(), water_interval=10, light_type="West")
-# # test = SolarCalculator(user_location={"latitude": "47.466748", "longitude": "-122.34722"}, current_date=datetime(2021, 11, 1), water_interval=5, light_type="West")
-
-# light_forcast = test.get_daily_sunlight()
-
-# print('################# LIGHT FORCAST BURIEN WA #################')
-# print(light_forcast)
-
-# total = 0
-# for light in light_forcast:
-#     hours = convert_time_delta_float(light)
-#     total = total + hours
-
-# average = total / len(light_forcast)
-
-# print('################# LIGHT AVERAGE BURIEN WA #################')
-# print(average)
-
-
-
-# test2 = SolarCalculator(user_location={"latitude": "-33.854816", "longitude": "151.216454"}, current_date=datetime.today(), water_interval=21, light_type="North")
-# test2 = SolarCalculator(user_location={"latitude": "-33.854816", "longitude": "151.216454"}, current_date=datetime(2021, 12, 27), water_interval=3, light_type="North")
-
-# light_forcast2 = test2.get_daily_sunlight()
-
-# print('################# LIGHT FORCAST SYDNEY AUSTRALIA #################')
-# print(light_forcast2)
-
-# total = 0
-# for light in light_forcast2:
-#     hours = convert_time_delta_float(light)
-#     total = total + hours
-
-# average2 = total / len(light_forcast2)
-
-# print('################# LIGHT AVERAGE SYDNEY AUSTRALIA #################')
-# print(average2)
