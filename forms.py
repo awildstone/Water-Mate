@@ -13,9 +13,9 @@ from flask_wtf.file import FileField, FileAllowed
 class SignupForm(FlaskForm):
     """Form to sign up a new user."""
 
-    city = StringField('City', validators=[InputRequired(message='You must enter your city for an accurate location.')])
-    state = StringField('State/Territory', validators=[InputRequired(message='You must enter your state/territory for an accurate location.')])
-    country = StringField('Country', validators=[InputRequired(message='You must enter your country for an accurate location.')])
+    city = StringField('City', validators=[InputRequired(message='You must enter your city for an accurate location.')], description='Seattle or Victoria')
+    state = StringField('State or Territory')
+    country = StringField('Country')
     name = StringField('Name', validators=[InputRequired(message='You must enter your name.')])
     email = StringField('E-mail', validators=[InputRequired(message='You must enter your email.'), Email(message='You must enter a valid email.')])
     username = StringField('Username', validators=[InputRequired(message='You must enter a username.')])
