@@ -2,13 +2,10 @@
 
 import requests, json
 from datetime import date, datetime, timedelta, timezone
-# from dateutil import tz
-# import pytz
 from tzlocal import get_localzone
 from zoneinfo import ZoneInfo
 
 BASE_URL = 'https://api.sunrise-sunset.org/json'
-# ALL_TIMEZONES = set(pytz.all_timezones_set)
 
 class SolarCalculator:
     """A class to get the solar forcast calculations based on a user' location,
@@ -45,18 +42,14 @@ class SolarCalculator:
         #Check if last two elements of time is AM and first two elements are 12
         if string[-2:] == 'AM' and string[:2] == '12':
             return '00' + string[2:-3]
-          
         #remove the AM    
         if string[-2:] == 'AM':
             return string[:-3]
-      
         #Check if last two elements of time is PM and first two elements are 12   
         if string[-2:] == 'PM' and string[:2] == '12':
             return string[:-3]
-          
-        else:
-            #add 12 to hours and remove PM
-            return str(int(string[:2]) + 12) + string[2:8]
+        #add 12 to hours and remove PM
+        return str(int(string[:2]) + 12) + string[2:8]
 
     def convert_UTC_to_localtime(self, date, time):
         """Accepts a UTC datetime object and a 12-hour formatted string in UTC time. Converts UTC time to local time then
@@ -65,7 +58,6 @@ class SolarCalculator:
         and https://howchoo.com/g/ywi5m2vkodk/working-with-datetime-objects-and-timezones-in-python."""
 
         converted_time = None
-
         if time[1] == ':':
             length = len(time)
             new_time = time.zfill(length + 1)
@@ -100,17 +92,6 @@ class SolarCalculator:
             'date': day})
         
         results = response.json()['results']
-
-        # print('################### LOCAL DATE ###################')
-        # print(day)
-        # print('################### SUNRISE ###################')
-        # print(results['sunrise'])
-        # print('################### SUNSET ###################')
-        # print(results['sunset'])
-        # print('################### SOLAR NOON ###################')
-        # print(results['solar_noon'])
-        # print('################### DAY LENGTH ###################')
-        # print(results['day_length'])
 
         if response.json()['status'] == 'OK':
             return {'date': day, 
@@ -183,11 +164,9 @@ class SolarCalculator:
 
             if float(self.user_location['latitude']) > 0:
                 #user is in the northern hemisphere
-                # print(nh_light_calculations[self.light_type])
                 plant_max_daily_light.append(nh_light_calculations[self.light_type])
             else:
                 #user is in the southern hemisphere
-                # print(sh_light_calculations[self.light_type])
                 plant_max_daily_light.append(sh_light_calculations[self.light_type])
             
         return plant_max_daily_light

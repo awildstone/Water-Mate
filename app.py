@@ -751,7 +751,8 @@ def water_plant(plant_id):
             plant_light_source = LightSource.query.get_or_404(plant.light_id)
             plant_type = PlantType.query.get_or_404(plant.type_id)
 
-            #if light source is artifical, just update the next water date and add the history record.
+            #if light source is artifical, just update the next water date and add the history record. 
+            # I could potentially force artificial light sources to have a manual schedule, this makes more sense then having seperate logic for both.
             if plant_light_source.type == 'Artificial':
                 water_schedule.next_water_date = datetime.today() + timedelta(days=water_schedule.water_interval)
 

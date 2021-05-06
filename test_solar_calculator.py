@@ -4,8 +4,6 @@
 
 from unittest import TestCase
 from datetime import date, datetime, timedelta, timezone
-from dateutil import tz
-import pytz
 from tzlocal import get_localzone
 from solar_calculator import SolarCalculator
 
@@ -111,7 +109,7 @@ class TestSolarCalculator(TestCase):
         self.assertEqual(conversion2.month, 8)
         self.assertEqual(conversion2.day, 7-1) #accounts for UTC -5 to UTC -11 because morning of UTC falls the previous day in local timezone
 
-        #The following tests assume that the local timezone is Pacific Time. Other timezones will fail these tests. Local timezone is set by the method.
+        #The following tests assume that the local timezone is Pacific Time. Other timezones will fail these tests. Local timezone is set by the convert_UTC_to_localtime() method.
 
         # 11/19/2010 was in PST time -8 hours behind UTC time 9:10:09 AM
         self.assertEqual(conversion1.hour, 9)

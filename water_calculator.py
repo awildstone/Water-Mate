@@ -25,7 +25,7 @@ class WaterCalculator:
             user_location=self.user.get_coordinates,
             current_date=self.water_schedule.water_date,
             water_interval=self.water_schedule.water_interval,
-            light_type = self.light_type
+            light_type = self.light_type.type
             )
 
         light_forcast = calculator.get_daily_sunlight()
@@ -78,25 +78,22 @@ class WaterCalculator:
 
         #compare the average hours with the optimal hours and adjust accordingly given the respective thresholds
         average_hours = self.calculate_average_hours(self.light_forcast)
-        print('########## AVG HOURS #############')
-        print(average_hours)
+        
         res = average_hours - base_light
         adjustment = 0
         
         positive_threshold = {
-            res >= 0 and res < .5: -1,
-            res >= .5 and res < 1: -2,
-            res >= 1 and res < 3: -3, 
-            res >= 3 and res < 6: -7,
-            res >= 6 and res < 9: -14,
+            res >= 0 and res < 1: 0,
+            res >= 1 and res < 3: -1, 
+            res >= 3 and res < 6: -2,
+            res >= 6 and res < 9: -7,
             res >= 10: -20}
 
         negative_threshold = {
-            res <= 0 and res > -.5: 1,
-            res <= -.5 and res > -1: 2,
-            res <= -1 and res > -3: 3, 
-            res <= -3 and res > -6: 7,
-            res <= -6 and res > -9: 14,
+            res <= 0 and res > -1: 0,
+            res <= -1 and res > -3: 1, 
+            res <= -3 and res > -6: 2,
+            res <= -6 and res > -9: 7,
             res <= -10: 20}
         
         if res >= 0:
