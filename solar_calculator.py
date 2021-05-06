@@ -44,7 +44,7 @@ class SolarCalculator:
 
         #Check if last two elements of time is AM and first two elements are 12
         if string[-2:] == 'AM' and string[:2] == '12':
-            return '00' + string[2:-2]
+            return '00' + string[2:-3]
           
         #remove the AM    
         if string[-2:] == 'AM':
@@ -121,7 +121,7 @@ class SolarCalculator:
 
     def get_solar_schedule(self):
         """Generates and returns a list of data for given number of dates:
-        [{"date": date, "sunrise": sunrise, "sunset": sunset, "day_length": day_length}, etc.]"""
+        [{"date": date, "sunrise": sunrise, "sunset": sunset, "day_length": day_length, "solar_noon": solar_noon}, {etc.]"""
 
         solar_schedule = []
         dates = self.generate_dates(self.current_date, self.water_interval)
@@ -132,12 +132,13 @@ class SolarCalculator:
         
         return solar_schedule
     
-    # Calculation to convert point in time to duration found on https://stackoverflow.com/questions/35241643/convert-datetime-time-into-datetime-timedelta-in-python-3-4
     def get_fraction_of_time(self, time, fraction):
         """ Accepts time (total daily hours), and a fraction that represents the fraction of total time we need. 
         Converts time into a duration of time then gets the fraction of that time.
 
-        Returns the fraction of the duration of time."""
+        Returns the fraction of the duration of time.
+        
+        Calculation to convert point in time to duration found on https://stackoverflow.com/questions/35241643/convert-datetime-time-into-datetime-timedelta-in-python-3-4"""
 
         duration_of_time = datetime.combine(date.min, time) - datetime.min
         fraction_of_total_time = duration_of_time * fraction
@@ -160,9 +161,9 @@ class SolarCalculator:
         for i in range(len(solar_forcast)):
             nh_light_calculations = {
                 "North": self.get_fraction_of_time(day_lengths[i].time(), .0625), #none to little sunlight - 1/16 of total daylight
-                "East": sunrise_times[i] - solar_noon_times[i], #sunrise-midday (soft morning light)
+                "East": datetime.combine(date.min, solar_noon_times[i].time()) - datetime.combine(date.min, sunrise_times[i].time()), #sunrise-midday (soft morning light)
                 "South": self.get_fraction_of_time(day_lengths[i].time(), 0.875), #sunrise to sunset - 7/8 of total daylight
-                "West": solar_noon_times[i] - sunset_times[i], #midday-sunset (hard afternoon light)
+                "West": datetime.combine(date.min, sunset_times[i].time()) - datetime.combine(date.min, solar_noon_times[i].time()), #midday-sunset (hard afternoon light)
                 "Northeast": self.get_fraction_of_time(day_lengths[i].time(), .125), # 1/8 of daily sun (soft morning light)
                 "Northwest": self.get_fraction_of_time(day_lengths[i].time(), .125), # 1/8 of daily sun (hard afternoon light)
                 "Southeast": self.get_fraction_of_time(day_lengths[i].time(), .75), #sunrise-midday (soft morning light) - 3/4 of total daylight
@@ -171,9 +172,9 @@ class SolarCalculator:
 
             sh_light_calculations = {
                 "North": self.get_fraction_of_time(day_lengths[i].time(), 0.875), #sunrise to sunset - 7/8 of total daylight
-                "East": sunrise_times[i] - solar_noon_times[i], #sunrise-midday (soft morning light)
+                "East": datetime.combine(date.min,solar_noon_times[i].time()) - datetime.combine(date.min, sunrise_times[i].time()), #sunrise-midday (soft morning light)
                 "South": self.get_fraction_of_time(day_lengths[i].time(), .0625), #none to little sunlight - 1/16 of total daylight
-                "West": solar_noon_times[i] - sunset_times[i], #midday-sunset (hard afternoon light)
+                "West": datetime.combine(date.min, sunset_times[i].time()) - datetime.combine(date.min, solar_noon_times[i].time()), #midday-sunset (hard afternoon light)
                 "Northeast": self.get_fraction_of_time(day_lengths[i].time(), .75), #sunrise-midday (soft morning light) - 3/4 of total daylight
                 "Northwest": self.get_fraction_of_time(day_lengths[i].time(), .75), #midday-sunset (hard afternoon light) - 3/4 of total daylight
                 "Southeast": self.get_fraction_of_time(day_lengths[i].time(), .125), # 1/8 of daily sun (soft morning light) 
