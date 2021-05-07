@@ -18,6 +18,7 @@ UPLOAD_FOLDER = 'uploads/user'
 
 app = Flask(__name__)
 
+# uri = os.getenv("DATABASE_URL", "postgresql:///water_mate_test")
 uri = os.getenv("DATABASE_URL", "postgresql:///water_mate")
 if uri.startswith("postgres://"):
     uri = uri.replace("postgres://", "postgresql://", 1)
@@ -87,6 +88,12 @@ def forbidden(e):
 def about():
     """Show about page."""
     return render_template('about.html')
+
+@app.route('/get-started')
+@auth_required
+def get_started():
+    """Show getting started page."""
+    return render_template('get_started.html')
 
 ####################
 # Signup/Login/Logout 
@@ -167,12 +174,6 @@ def logout():
 # User Routes
 ####################
 
-@app.route('/get-started')
-@auth_required
-def get_started():
-    """Show getting started page."""
-    return render_template('get_started.html')
-
 @app.route('/profile')
 @auth_required
 def view_profile():
@@ -240,7 +241,7 @@ def edit_location():
 
         if coordinates:
             g.user.latitude = coordinates['lat']
-            g.user.longitude=coordinates['lng']
+            g.user.longitude = coordinates['lng']
 
             db.session.commit()
             flash('Geolocation is updated.', 'success')
@@ -752,7 +753,7 @@ def water_plant(plant_id):
             plant_type = PlantType.query.get_or_404(plant.type_id)
 
             #if light source is artifical, just update the next water date and add the history record. 
-            # I could potentially force artificial light sources to have a manual schedule, this makes more sense then having seperate logic for both.
+            # I could potentially force artificial light sources to have a manual schedule, this makes more sense than having seperate logic for both.
             if plant_light_source.type == 'Artificial':
                 water_schedule.next_water_date = datetime.today() + timedelta(days=water_schedule.water_interval)
 
