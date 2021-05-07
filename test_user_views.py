@@ -35,13 +35,13 @@ class TestUserViews(TestCase):
         db.session.query(Plant).delete()
         db.session.commit()
 
-        db.session.query(Collection).delete()
+        db.session.query(LightSource).delete()
         db.session.commit()
 
         db.session.query(Room).delete()
         db.session.commit()
 
-        db.session.query(LightSource).delete()
+        db.session.query(Collection).delete()
         db.session.commit()
 
         db.session.query(User).delete()

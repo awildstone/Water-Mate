@@ -5,7 +5,7 @@
 import os
 import shutil
 from unittest import TestCase
-from models import db, connect_db, User, Collection, Room, LightSource, LightType, Plant
+from models import db, connect_db, User, Collection, Room, LightSource, Plant
 
 #set DB environment to test DB
 os.environ['DATABASE_URL'] = 'postgresql:///water_mate_test'
@@ -34,13 +34,13 @@ class TestLightSourceViews(TestCase):
         db.session.query(Plant).delete()
         db.session.commit()
 
-        db.session.query(Collection).delete()
+        db.session.query(LightSource).delete()
         db.session.commit()
 
         db.session.query(Room).delete()
         db.session.commit()
 
-        db.session.query(LightSource).delete()
+        db.session.query(Collection).delete()
         db.session.commit()
 
         db.session.query(User).delete()
@@ -88,7 +88,8 @@ class TestLightSourceViews(TestCase):
         #set up test light sources
         light_source1 = LightSource(id=1, type='East', type_id=3, daily_total=8, room_id=1)
         light_source2 = LightSource(id=2, type='Southwest', type_id=9, daily_total=8, room_id=2)
-        db.session.add_all([light_source1, light_source2])
+        light_source3 = LightSource(id=3, type='South', type_id=4, daily_total=8, room_id=2)
+        db.session.add_all([light_source1, light_source2, light_source3])
         db.session.commit()
         
         #set up test plants
@@ -154,9 +155,23 @@ class TestLightSourceViews(TestCase):
             with c.session_transaction() as session:
                 session[CURRENT_USER_KEY] = self.user2.id
             
+            res = c.post('/collection/room/lightsource/3', follow_redirects=True)
+
+            lights = LightSource.query.filter_by(room_id=2).all()
+
+            self.assertEqual(res.status_code, 200)
+            self.assertEqual(len(lights), 1)
+    
+    def test_delete_lightsource_with_plants(self):
+        """You cannot delete a lightsource that has plants."""
+
+        with self.client as c:
+            with c.session_transaction() as session:
+                session[CURRENT_USER_KEY] = self.user2.id
+            
             res = c.post('/collection/room/lightsource/2', follow_redirects=True)
 
             lights = LightSource.query.filter_by(room_id=2).all()
 
             self.assertEqual(res.status_code, 200)
-            self.assertEqual(len(lights), 0)
+            self.assertEqual(len(lights), 2)

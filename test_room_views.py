@@ -5,7 +5,7 @@
 import os
 import shutil
 from unittest import TestCase
-from models import db, connect_db, User, Collection, Room
+from models import db, connect_db, User, Collection, Room, LightSource, Plant
 
 #set DB environment to test DB
 os.environ['DATABASE_URL'] = 'postgresql:///water_mate_test'
@@ -31,10 +31,16 @@ class TestRoomViews(TestCase):
             shutil.rmtree(f'{UPLOAD_FOLDER}/{12}')
 
         #delete any old data from the tables
-        db.session.query(Collection).delete()
+        db.session.query(Plant).delete()
+        db.session.commit()
+
+        db.session.query(LightSource).delete()
         db.session.commit()
 
         db.session.query(Room).delete()
+        db.session.commit()
+
+        db.session.query(Collection).delete()
         db.session.commit()
 
         db.session.query(User).delete()
@@ -79,6 +85,16 @@ class TestRoomViews(TestCase):
         room3 = Room(id=3, name='Bedroom', collection_id=2)
         room4 = Room(id=4, name='Bathroom', collection_id=2)
         db.session.add_all([room1, room2, room3, room4])
+        db.session.commit()
+
+        #set up test light source
+        light_source1 = LightSource(id=1, type='East', type_id=3, daily_total=8, room_id=1)
+        db.session.add(light_source1)
+        db.session.commit()
+
+        #set up test plant
+        plant1 = Plant(id=1, name='Hoya', image=None, user_id=10, type_id=37, room_id=1, light_id=1)
+        db.session.add(plant1)
         db.session.commit()
     
     def tearDown(self):
@@ -185,3 +201,17 @@ class TestRoomViews(TestCase):
 
             self.assertEqual(res.status_code, 200)
             self.assertEqual(len(rooms), 1)
+    
+    def test_delete_room_with_plants(self):
+        """You cannot delete a room that has plants in it."""
+
+        with self.client as c:
+            with c.session_transaction() as session:
+                session[CURRENT_USER_KEY] = self.user1.id
+            
+            res = c.post('/collection/rooms/2/delete', follow_redirects=True)
+
+            rooms = Room.query.filter_by(collection_id=1).all()
+
+            self.assertEqual(res.status_code, 200)
+            self.assertEqual(len(rooms), 2)

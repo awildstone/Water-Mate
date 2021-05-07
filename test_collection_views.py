@@ -5,7 +5,7 @@
 import os
 import shutil
 from unittest import TestCase
-from models import db, connect_db, User, Collection
+from models import db, connect_db, User, Collection, Room, Plant, LightSource
 
 #set DB environment to test DB
 os.environ['DATABASE_URL'] = 'postgresql:///water_mate_test'
@@ -30,8 +30,17 @@ class TestCollectionViews(TestCase):
         if os.path.isdir(f'{UPLOAD_FOLDER}/{12}'):
             shutil.rmtree(f'{UPLOAD_FOLDER}/{12}')
 
-        #delete any old data from the tables
+       #delete any old data from the tables
+        db.session.query(Plant).delete()
+        db.session.commit()
+
         db.session.query(Collection).delete()
+        db.session.commit()
+
+        db.session.query(Room).delete()
+        db.session.commit()
+
+        db.session.query(LightSource).delete()
         db.session.commit()
 
         db.session.query(User).delete()
@@ -68,6 +77,11 @@ class TestCollectionViews(TestCase):
         collection1 = Collection(id=1, name='Home', user_id=10)
         collection2 = Collection(id=2, name='Work', user_id=10)
         db.session.add_all([collection1, collection2])
+        db.session.commit()
+
+        #add a test room
+        room1 = Room(id=1, name='Kitchen', collection_id=1)
+        db.session.add(room1)
         db.session.commit()
     
     def tearDown(self):
@@ -174,3 +188,17 @@ class TestCollectionViews(TestCase):
 
             self.assertEqual(res.status_code, 200)
             self.assertEqual(len(collections), 1)
+    
+    def test_delete_collection_with_room(self):
+        """You cannot delete a collection with rooms in it."""
+
+        with self.client as c:
+            with c.session_transaction() as session:
+                session[CURRENT_USER_KEY] = self.user1.id
+            
+            res = c.post('/collections/1/delete', follow_redirects=True)
+
+            collections = Collection.query.filter_by(user_id=self.user1.id).all()
+
+            self.assertEqual(res.status_code, 200)
+            self.assertEqual(len(collections), 2)

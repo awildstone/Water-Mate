@@ -590,6 +590,7 @@ def add_plant(room_id):
         if form.validate_on_submit():
             img = form.image.data
             #securely validate image (if included)
+            # print(request.values)
             if img:
                 filename = secure_filename(img.filename)
                 img.save(os.path.join(f'{UPLOAD_FOLDER}/{g.user.id}', filename))
@@ -598,7 +599,7 @@ def add_plant(room_id):
                     name=form.name.data,
                     image = f'{g.user.id}/{filename}',
                     user_id=g.user.id,
-                    type_id=form.plant_type.data.id,
+                    type_id=form.plant_type.id,
                     room_id=room.id,
                     light_id=form.light_source.data.id)
             else:
@@ -639,7 +640,6 @@ def edit_plant(plant_id):
             #securely validate image (if included)
             img = form.image.data
             if img != plant.image:
-                print(form.image)
                 filename = secure_filename(img.filename)
                 img.save(os.path.join(f'{UPLOAD_FOLDER}/{g.user.id}', filename))
                 plant.image = f'{g.user.id}/{filename}'
@@ -676,6 +676,7 @@ def delete_plant(plant_id):
     if g.user.id == plant.user_id:
         db.session.delete(plant)
         db.session.commit()
+        flash('Plant Deleted.', 'success')
         return redirect(url_for('view_room', room_id=room.id))
     else:
         flash('Access Denied.', 'danger')
