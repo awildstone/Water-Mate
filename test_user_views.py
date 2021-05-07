@@ -33,31 +33,21 @@ class TestUserViews(TestCase):
 
         #delete any old data from the tables
         db.session.query(Plant).delete()
-        # plants = Plant.query.all()
-        # db.session.delete(plants)
         db.session.commit()
 
         db.session.query(Collection).delete()
-        # collections = Collection.query.all()
-        # db.session.delete(collections)
         db.session.commit()
 
         db.session.query(Room).delete()
-        # rooms = Room.query.all()
-        # db.session.delete(rooms)
         db.session.commit()
 
         db.session.query(LightSource).delete()
-        # lights = LightSource.query.all()
-        # db.session.delete(lights)
         db.session.commit()
 
         db.session.query(User).delete()
-        # users = User.query.all()
-        # db.session.delete(users)
-
         db.session.commit()
 
+        #set up test user accounts
         self.user1 = User.signup(
             name='Pepper Cat',
             email='peppercat@gmail.com',
@@ -84,30 +74,27 @@ class TestUserViews(TestCase):
 
         db.session.commit()
 
+        #set up test collections
         collection1 = Collection(id=1, name='Home', user_id=10)
         collection2 = Collection(id=2, name='My House', user_id=12)
-        
         db.session.add_all([collection1, collection2])
         db.session.commit()
 
+        #set up test rooms
         room1 = Room(id=1, name='Kitchen', collection_id=1)
-
         room2 = Room(id=2, name='Bedroom', collection_id=2)
-        
         db.session.add_all([room1, room2])
         db.session.commit()
 
+        #set up test light sources
         light_source1 = LightSource(id=1, type='East', type_id=3, daily_total=8, room_id=1)
-        
         light_source2 = LightSource(id=2, type='Southwest', type_id=9, daily_total=8, room_id=2)
-        
         db.session.add_all([light_source1, light_source2])
         db.session.commit()
         
+        #set up test plants
         plant1 = Plant(id=1, name='Hoya', image=None, user_id=10, type_id=37, room_id=1, light_id=1)
-
         plant2 = Plant(id=2, name='Cactus', image=None, user_id=12, type_id=16, room_id=2, light_id=2)
-
         db.session.add_all([plant1, plant2])
         db.session.commit()
     
