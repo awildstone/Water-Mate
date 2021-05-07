@@ -5,7 +5,7 @@
 import os
 import shutil
 from unittest import TestCase
-from models import db, connect_db, User, Collection, Room, LightSource, Plant
+from models import db, connect_db, User, Collection
 
 #set DB environment to test DB
 os.environ['DATABASE_URL'] = 'postgresql:///water_mate_test'
@@ -31,16 +31,7 @@ class TestCollectionViews(TestCase):
             shutil.rmtree(f'{UPLOAD_FOLDER}/{12}')
 
         #delete any old data from the tables
-        db.session.query(Plant).delete()
-        db.session.commit()
-
         db.session.query(Collection).delete()
-        db.session.commit()
-
-        db.session.query(Room).delete()
-        db.session.commit()
-
-        db.session.query(LightSource).delete()
         db.session.commit()
 
         db.session.query(User).delete()

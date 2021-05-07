@@ -103,7 +103,7 @@ class EditCollectionForm(FlaskForm):
 class EditRoomForm(FlaskForm):
     """Form for user to edit a Room name."""
 
-    name = StringField('Collection Name', validators=[InputRequired('You must add a name for your room')])
+    name = StringField('Room Name', validators=[InputRequired('You must add a name for your room')])
 
 class EditPlantForm(FlaskForm):
     """Form to edit a plant."""

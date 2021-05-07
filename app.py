@@ -414,8 +414,8 @@ def add_room(collection_id):
                 collection.rooms.append(new_room)
                 db.session.commit()
                 flash(f'New Room, {new_room.name} - added!', 'success')
+                
             except IntegrityError:
-
                 flash('Room names must be unique.', 'warning')
 
             return redirect(url_for('view_collection', collection_id=collection_id))
