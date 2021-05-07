@@ -49,7 +49,7 @@ def light_types():
 class AddLightSource(FlaskForm):
     """Form to add light source(s) to a room."""
     
-    light_type = QuerySelectMultipleField('Light Source', query_factory=light_types, get_label='type', allow_blank=True, blank_text='Select all of the light sources in your room.', validators=[DataRequired(message="You must select a light type.")])
+    light_type = QuerySelectMultipleField('Light Source', query_factory=light_types, get_label='type', blank_text='Select all of the light sources in your room.', validators=[DataRequired(message="You must select a light type.")])
 
 def plant_types():
     """Get currently available plant types from the PlantType ORM."""

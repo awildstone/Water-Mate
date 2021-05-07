@@ -1,11 +1,11 @@
 """Test Light Source Views."""
 
-# FLASK_ENV=production python -m unittest test_room_views.py
+# FLASK_ENV=production python -m unittest test_light_views.py
 
 import os
 import shutil
 from unittest import TestCase
-from models import db, connect_db, User, Collection, Room, LightSource
+from models import db, connect_db, User, Collection, Room, LightSource, LightType, Plant
 
 #set DB environment to test DB
 os.environ['DATABASE_URL'] = 'postgresql:///water_mate_test'
@@ -97,8 +97,66 @@ class TestLightSourceViews(TestCase):
         db.session.add_all([plant1, plant2])
         db.session.commit()
 
-        def tearDown(self):
+    def tearDown(self):
         """Rollback any sessions."""
 
         db.session.rollback()
         db.session.remove()
+
+    def test_add_light_form(self):
+        """View the add light source form."""
+
+        with self.client as c:
+            with c.session_transaction() as session:
+                session[CURRENT_USER_KEY] = self.user1.id
+            
+            res = c.get('/collection/rooms/1/add-light-source')
+        
+            self.assertEqual(res.status_code, 200)
+            self.assertIn('Add Light Source', str(res.data))
+            self.assertIn('Select all Light Sources that are applicable in your room.', str(res.data))
+            self.assertIn('North', str(res.data))
+            self.assertIn('East', str(res.data))
+            self.assertIn('Southwest', str(res.data))
+
+    def test_add_light(self):
+        """Add a new light source to a room."""
+
+        with self.client as c:
+            with c.session_transaction() as session:
+                session[CURRENT_USER_KEY] = self.user1.id
+            
+            res = c.post('/collection/rooms/1/add-light-source', data={'light_type': 5}, follow_redirects=True)
+
+            lights = LightSource.query.filter_by(room_id=1).all()
+
+            self.assertEqual(res.status_code, 200)
+            self.assertEqual(len(lights), 2)
+    
+    def test_view_light_plants(self):
+        """View plants using a light source."""
+
+        with self.client as c:
+            with c.session_transaction() as session:
+                session[CURRENT_USER_KEY] = self.user2.id
+
+        res = c.get('/collection/room/lightsource/2')
+
+        self.assertEqual(res.status_code, 200)
+        self.assertIn('Cactus', str(res.data))
+        self.assertIn('Southwest Light', str(res.data))
+        self.assertIn('Delete Southwest Light', str(res.data))
+
+    def test_delete_light(self):
+        """Delete a light source by id."""
+
+        with self.client as c:
+            with c.session_transaction() as session:
+                session[CURRENT_USER_KEY] = self.user2.id
+            
+            res = c.post('/collection/room/lightsource/2', follow_redirects=True)
+
+            lights = LightSource.query.filter_by(room_id=2).all()
+
+            self.assertEqual(res.status_code, 200)
+            self.assertEqual(len(lights), 0)

@@ -414,7 +414,7 @@ def add_room(collection_id):
                 collection.rooms.append(new_room)
                 db.session.commit()
                 flash(f'New Room, {new_room.name} - added!', 'success')
-                
+
             except IntegrityError:
                 flash('Room names must be unique.', 'warning')
 
@@ -492,7 +492,7 @@ def add_lightsource(room_id):
             try:
                 #types arrive as a list of ORM objects
                 light_types = form.light_type.data
-
+                # print(request.form.to_dict)
                 for light in light_types:
                     #we will set the daily_total to the default 8 hours for now.
                     room.lightsources.append(LightSource(type=light.type, type_id=light.id, room_id=room_id))
