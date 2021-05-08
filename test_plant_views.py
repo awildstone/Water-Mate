@@ -4,9 +4,9 @@
 
 import os
 import shutil
-from csv import DictReader
+# from csv import DictReader
 from unittest import TestCase
-from models import db, connect_db, User, Collection, Room, LightSource, Plant, WaterSchedule, LightType, PlantType
+from models import db, connect_db, User, Collection, Room, LightSource, Plant, WaterSchedule #,LightType, PlantType
 from datetime import datetime, timedelta
 
 #set DB environment to test DB

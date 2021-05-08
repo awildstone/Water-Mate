@@ -174,6 +174,16 @@ def logout():
 # User Routes
 ####################
 
+@app.route('/dashboard')
+@auth_required
+def dashboard():
+    """Show the user dashboard for a specific user. Shows all Collections, Rooms, LightSources and Plants."""
+
+    user = g.user
+    collections = Collection.query.filter_by(user_id=g.user.id).all()
+
+    return render_template('/dashboard.html', user=user, collections=collections)
+
 @app.route('/profile')
 @auth_required
 def view_profile():
@@ -715,16 +725,6 @@ def water_manager():
     plants_to_water = [plant for plant in plants if plant.id in plant_ids]
 
     return render_template('water_manager.html', user=g.user, plants=plants_to_water, form=form, schedules=schedules)
-
-@app.route('/dashboard')
-@auth_required
-def dashboard():
-    """Show the user dashboard for a specific user. Shows all Collections, Rooms, LightSources and Plants."""
-
-    user = g.user
-    collections = Collection.query.filter_by(user_id=g.user.id).all()
-
-    return render_template('/dashboard.html', user=user, collections=collections)
 
 @app.route('/water-manager/<int:plant_id>/water', methods=['POST'])
 @auth_required

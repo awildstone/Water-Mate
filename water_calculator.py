@@ -25,7 +25,8 @@ class WaterCalculator:
             user_location=self.user.get_coordinates,
             current_date=self.water_schedule.water_date,
             water_interval=self.water_schedule.water_interval,
-            light_type = self.light_type.type
+            # light_type = self.light_type.type
+            light_type = self.light_type
             )
 
         light_forcast = calculator.get_daily_sunlight()

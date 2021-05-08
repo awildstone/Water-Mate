@@ -113,6 +113,23 @@ class TestUserViews(TestCase):
         self.assertIsNotNone(self.user2)
         self.assertIsInstance(self.user2, User)
     
+    def test_view_dashboard(self):
+        """The dashboard should display all of the user's collections, rooms, light sources, and plants."""
+
+        with self.client as c:
+            with c.session_transaction() as session:
+                session[CURRENT_USER_KEY] = self.user2.id
+            
+            res = c.get('/dashboard')
+
+            self.assertEqual(res.status_code, 200)
+            self.assertIn('Welcome to the dashboard, Kittenz Meow. View, or edit your collection(s).', str(res.data))
+            self.assertIn('My House', str(res.data))
+            self.assertIn('Bedroom', str(res.data))
+            self.assertIn('Southwest', str(res.data))
+            self.assertIn('Cactus', str(res.data))
+
+    
     def test_view_profile(self):
         """Test that the user profile view shows the user details."""
 
