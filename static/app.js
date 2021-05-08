@@ -1,4 +1,5 @@
-const BASE_URL = 'http://127.0.0.1:5000/water-manager/';
+// const BASE_URL = 'http://127.0.0.1:5000/'; //development
+const BASE_URL = 'https://water-mate.herokuapp.com/' //production
 
 /* Selector for the Edit Water Schedule form and Watering Interval Formfield
 If the box is checked, shows the field. If the box is not checked hides the field. */
@@ -72,7 +73,7 @@ if (container) {
 /* Makes a call to the API to water a plant. */
 async function waterPlant(plant_id, notes) {
     // send post request to server
-    response = await axios.post(`${BASE_URL}${plant_id}/water`, {"notes": notes});
+    response = await axios.post(`${BASE_URL}water-manager/${plant_id}/water`, {"notes": notes});
     console.log(response.status)
     if (response.status === 201) {
         // remove the updated plant from the dashboard
@@ -84,7 +85,7 @@ async function waterPlant(plant_id, notes) {
 /* Makes a call to the API to snooze a plant's water schedule. */
 async function snoozePlant(plant_id, notes) {
     // send post request to server
-    response = await axios.post(`${BASE_URL}${plant_id}/snooze`, {"notes": notes});
+    response = await axios.post(`${BASE_URL}water-manager/${plant_id}/snooze`, {"notes": notes});
     console.log(response.status)
     if (response.status === 201) {
         // remove the updated plant from the dashboard
