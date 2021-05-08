@@ -1,0 +1,63 @@
+name,base_water,base_sunlight,max_days_without_water
+Aeonium,14,8,60
+Aeschynanthus (Lipstick Plant),7,4,20
+African Violet,7,4,14
+Agave,21,12,60
+Aglaonemas (Chinese Evergreen),7,2,14
+Alocasia,10,6,30
+Aloe,21,8,30
+Anthurium,7,2,14
+Aphelandra (Zebra Plant),7,3,12
+Asteraceae (Daisy),7,8,14
+Bananna,7,8,14
+Begonia,7,2,12
+Bird of Paradise,10,8,20
+Birdnest Fern,7,6,14
+Bromeliad,7,6,14
+Cactus,21,12,90
+Calathea,7,2,12
+Carnivorous plant,5,6,7
+Cast Iron Plant,14,2,25
+Colocasias,10,6,14
+Columnea (Goldfish Plant),7,4,12
+Crassula,21,8,60
+Croton,7,4,12
+Ctenanthe,7,2,12
+Dieffenbachia (Dumb Cane),7,4,15
+Dischidia,10,4,18
+Dracaena (Dragon Tree),7,4,25
+Dracaena trifasciata (Snake Plant),14,2,20
+Echeveria,21,8,60
+Euphorbia,14,12,60
+Fern,7,4,12
+Ficus,7,4,15
+Fiddle Leaf Fig,5,4,10
+Fittonia,7,4,12
+Haworthia,21,6,60
+Heartleaf Philodendron,7,4,14
+Hoya,10,4,18
+Ivy,5,4,12
+Jade,21,6,30
+Jasmine,4,6,12
+Kalanchoe,14,8,30
+Lilly,7,3,12
+Lucky Bamboo,14,3,25
+Monstera,7,3,15
+Orchid,7,6,12
+Pachira aquatica (Money Tree),10,4,25
+Palm,7,8,12
+Pepperomia,10,6,25
+Philodendron,7,3,12
+Pilea,7,4,14
+Pothos,10,3,15
+Schefflera (Umbrella Tree),7,3,14
+Schlumbergera (Holiday Cactus),7,6,12
+Scindapsus (Pictus or Satin Pothos),10,3,15
+Sedum,14,8,60
+Spider Plant,7,3,15
+Staghorn Fern,10,4,20
+Stromanthe,7,2,12
+Syngonium (Arrowhead vine),10,2,20
+Tillandsia (Airplant),7,8,15
+Tradescantia (Spiderwort),10,4,18
+Zamioculcas (ZZ Plant),14,2,25
