@@ -3,5 +3,3 @@ keys.py
 __pycache__
 seed.py
 /generator
-Procfile
-runtime.txt
