@@ -600,7 +600,6 @@ def add_plant(room_id):
         if form.validate_on_submit():
             img = form.image.data
             #securely validate image (if included)
-            # print(request.values)
             if img:
                 filename = secure_filename(img.filename)
                 img.save(os.path.join(f'{UPLOAD_FOLDER}/{g.user.id}', filename))
@@ -624,7 +623,9 @@ def add_plant(room_id):
             room.plants.append(new_plant)
             db.session.commit()
 
-            create_waterschedule(new_plant)
+            water_date = form.water_date.data
+            create_waterschedule(new_plant, water_date)
+
             flash(f'New plant, {new_plant.name}, added to {room.name}!', 'success')
             return redirect(url_for('view_room', room_id=room.id))
     else:
@@ -700,7 +701,7 @@ def delete_plant(plant_id):
 # Schedule Routes
 ####################
 
-def create_waterschedule(plant):
+def create_waterschedule(plant, date=None):
     """This is a helper method to create a Water Schedule for a newly added plant.
     Accepts a plant ORM object, sets water_date to current datetime and water interval
     is set from plant type base interval."""
@@ -708,8 +709,8 @@ def create_waterschedule(plant):
     plant_type = PlantType.query.get_or_404(plant.type_id)
 
     plant.water_schedule.append(WaterSchedule(
-        water_date=datetime.today(),
-        next_water_date=datetime.today() + timedelta(days=plant_type.base_water),
+        water_date=date if date else datetime.today(),
+        next_water_date=date + timedelta(days=plant_type.base_water) if date else datetime.today() + timedelta(days=plant_type.base_water),
         water_interval=plant_type.base_water,
         plant_id=plant.id
     ))
@@ -736,7 +737,7 @@ def water_plant(plant_id):
     """Waters a plant by plant id, updates the plant water schedule and updates the plant water history table."""
 
     plant = Plant.query.get_or_404(plant_id)
-    water_schedule = WaterSchedule.query.get_or_404(plant.id)
+    water_schedule = WaterSchedule.query.filter_by(plant_id=plant.id).first()
 
     if g.user.id == plant.user_id:
         if water_schedule.manual_mode == True:
@@ -809,7 +810,7 @@ def snooze_plant(plant_id,):
 
     if g.user.id == plant.user_id:
         #update the water schedule and water history table
-        water_schedule = WaterSchedule.query.get_or_404(plant.id)
+        water_schedule = WaterSchedule.query.filter_by(plant_id=plant.id).first()
         num_days = 3
         water_schedule.next_water_date = datetime.today() + timedelta(days=num_days)
 

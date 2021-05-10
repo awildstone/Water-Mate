@@ -1,7 +1,8 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, TextAreaField, DecimalField, SelectField, BooleanField
+from wtforms.fields.html5 import DateField
 from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField, QuerySelectField, widgets
-from wtforms.validators import InputRequired, Email, Length, EqualTo, DataRequired
+from wtforms.validators import InputRequired, Email, Length, EqualTo, DataRequired, Optional
 from models import LightType, PlantType
 from flask_wtf.file import FileField, FileAllowed
 
@@ -69,6 +70,7 @@ class AddPlantForm(FlaskForm):
     """Form to add a new plant."""
 
     name = StringField('Plant Name', validators=[InputRequired(message='You must enter a name for your plant.')])
+    water_date = DateField('Water Date (If left blank this will default to today)', format='%Y-%m-%d', validators=[Optional()])
     image = FileField('Plant Image (Optional)', validators=[FileAllowed(['jpg', 'png', 'jpeg'], '.jpg, .png, or .jpeg images only!')])
     plant_type = QuerySelectField('Plant Type', query_factory=plant_types, get_label='name', allow_blank=True, blank_text='Select the type for your plant.', validators=[DataRequired(message="You must select a plant type.")])
     light_source = QuerySelectField('Light Source Type', get_label='type', allow_blank=True, blank_text='Select the light your plant uses.', validators=[DataRequired(message="You must select a light source.")]) 
