@@ -4,11 +4,10 @@
 
 {% block content %}
 
-<h1>Edit Collection</h1>
-
-<p>Please enter the new name of your collection.</p>
-
-<form method="POST">
+<div class="col-6 text-left">
+  <h2>Edit Collection</h2>
+  <p>Please enter the new name of your collection.</p>
+  <form method="POST">
     {{ form.hidden_tag() }}
     {% for field in form if field.widget.input_type != 'hidden' %}
     <div class="mb-3">
@@ -19,7 +18,10 @@
       {% endfor %}
     </div>
     {% endfor %}
-    <a href="{{ url_for('show_collections') }}" class="btn btn-secondary">Cancel</a>
-    <button class="btn btn-success" type="submit">Edit Collection</button>
+    <div class="d-flex justify-content-between">
+      <button class="btn btn-success" type="submit">Save</button>
+      <a href="{{ url_for('show_collections') }}" class="btn btn-secondary">Cancel</a>
+  </div>
   </form>
+</div>
 {% endblock %}

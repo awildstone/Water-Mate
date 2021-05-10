@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, TextAreaField, DecimalField, SelectField, BooleanField
-from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField, QuerySelectField
+from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField, QuerySelectField, widgets
 from wtforms.validators import InputRequired, Email, Length, EqualTo, DataRequired
 from models import LightType, PlantType
 from flask_wtf.file import FileField, FileAllowed
@@ -46,10 +46,20 @@ def light_types():
     """Get currently available light types from the LightType ORM."""
     return LightType.query.all()
 
+class MultiCheckboxField(QuerySelectMultipleField):
+    """
+    A multiple-select, except displays a list of checkboxes.
+
+    Iterating the field will produce subfields, allowing custom rendering of
+    the enclosed checkbox fields.
+    """
+    widget = widgets.ListWidget(prefix_label=False)
+    option_widget = widgets.CheckboxInput()
+
 class AddLightSource(FlaskForm):
     """Form to add light source(s) to a room."""
-    
-    light_type = QuerySelectMultipleField('Light Source', query_factory=light_types, get_label='type', blank_text='Select all of the light sources in your room.', validators=[DataRequired(message="You must select a light type.")])
+
+    light_type = MultiCheckboxField('Light Source', query_factory=light_types, get_label='type', blank_text='Select all of the light sources in your room.', validators=[DataRequired(message="You must select a light type.")])
 
 def plant_types():
     """Get currently available plant types from the PlantType ORM."""
@@ -112,6 +122,8 @@ class EditPlantForm(FlaskForm):
     image = FileField('Plant Image (Optional)', validators=[FileAllowed(['jpg', 'png', 'jpeg'], '.jpg, .png, or .jpeg images only!')])
     plant_type = QuerySelectField(query_factory=plant_types, get_label='name', allow_blank=True, blank_text='Select the type for your plant.', validators=[DataRequired(message='You must enter a plant type!.')])
     light_source = QuerySelectField(get_label='type', allow_blank=True, blank_text='Select the light your plant uses.', validators=[DataRequired(message='You must enter a light source!')])
+
+    #Can I set a default option from the OBJ?
 
 ####################
 # Schedule

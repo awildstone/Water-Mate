@@ -4,49 +4,50 @@
 
 {% block content %}
 
-<h1>{{ room.name }}</h1>
-{% if lightsources %}
-<h4>Your {{ room.name }} has the following light sources:</h4>
+<div class="col-8 mx-auto">
+  <h1>{{ room.name }}</h1>
+  {% if lightsources %}
+  <h4>Your {{ room.name }} has the following light sources:</h4>
 
-<ul class="list-group m-3">
+  <ul class="list-group m-3">
     {% for light in lightsources %}
     <li class="list-group-item list-group-item-secondary"><a href="{{ url_for('view_lightsource_plants', lightsource_id=light.id) }}">{{ light.type }}</a></li>
     {% endfor %}
   </ul>
 
-<p><a href="{{ url_for('add_lightsource', room_id=room.id) }}" class="btn btn-success">Add a Light Source</a></p>
+  <p><a href="{{ url_for('add_lightsource', room_id=room.id) }}" class="btn btn-success">Add a Light Source</a></p>
 
-{% if plants %}
-<h4>Your {{ room.name }} has the following plants:</h4>
+  {% if plants %}
+  <h4>Your {{ room.name }} has the following plants:</h4>
 
-<ul class="list-group m-3">
+  <ul class="list-group m-3">
     {% for plant in plants %}
-    <li class="list-group-item list-group-item-secondary"><a href="{{ url_for('view_plant', plant_id=plant.id) }}">{{ plant.name }}</a>
-  </li>
+    <li class="list-group-item list-group-item-secondary"><a href="{{ url_for('view_plant', plant_id=plant.id) }}">{{ plant.name }}</a></li>
     {% endfor %}
-</ul>
+  </ul>
 
-<p><a href="{{ url_for('add_plant', room_id=room.id) }}" class="btn btn-success">Add a Plant</a></p>
-{% else %}
-<h4>Add plants to this room:</h4>
-<p><a href="{{ url_for('add_plant', room_id=room.id) }}" class="btn btn-success">Add a Plant</a></p>
-{% endif %}
+  <p><a href="{{ url_for('add_plant', room_id=room.id) }}" class="btn btn-success">Add a Plant</a></p>
+  {% else %}
+  <h4>Add plants to this room:</h4>
+  <p><a href="{{ url_for('add_plant', room_id=room.id) }}" class="btn btn-success">Add a Plant</a></p>
+  {% endif %}
 
-<div class="row m-4">
-  <div class="col">
-    <a href="{{ url_for('view_collection', collection_id=room.collection_id) }}" class="btn btn-info btn-lg m-2">View Collection</a>
-  </div>
-  <div class="col">
-    <a href="{{ url_for('edit_room', room_id=room.id) }}" class="btn btn-warning btn-lg m-2">Edit Room</a>
+  <div class="row m-4">
+    <div class="col">
+      <a href="{{ url_for('view_collection', collection_id=room.collection_id) }}" class="btn btn-info btn-lg m-2">Collection</a>
     </div>
-  <div class="col"> 
-    <form method="POST" action="{{ url_for('delete_room', room_id=room.id)}}"><button class="btn btn-danger btn-lg m-2">Delete Room</button></form>
+    <div class="col">
+      <a href="{{ url_for('edit_room', room_id=room.id) }}" class="btn btn-warning btn-lg m-2">Edit Room</a>
+    </div>
+    <div class="col"> 
+      <form method="POST" action="{{ url_for('delete_room', room_id=room.id)}}"><button class="btn btn-danger btn-lg m-2">Delete Room</button></form>
+    </div>
   </div>
-<div>
 
-{% else %}
-<h4>Add lightsources to your room:</h4>
-<p><a href="{{ url_for('add_lightsource', room_id=room.id) }}" class="btn btn-success">Add a Light Source</a></p>
-{% endif %}
+  {% else %}
+  <h4>Add lightsources to your room:</h4>
+  <p><a href="{{ url_for('add_lightsource', room_id=room.id) }}" class="btn btn-success">Add a Light Source</a></p>
+  {% endif %}
+</div>
 
 {% endblock %}

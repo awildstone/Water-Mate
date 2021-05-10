@@ -4,23 +4,24 @@
 
 {% block content %}
 
-<h1>{{ collection.name }}</h1>
+<div class="col-6 mx-auto">
+  <h1>{{ collection.name }}</h1>
+  {% if rooms %}
+  <p>Your {{ collection.name }} Collection has the following rooms:</p>
 
-{% if rooms %}
-<p>Your {{ collection.name }} Collection has the following rooms:</p>
-
-<ul class="list-group m-3">
+  <ul class="list-group m-3">
   {% for room in rooms %}
-  <li class="list-group-item list-group-item-secondary">
-    <a href="{{ url_for('view_room', room_id=room.id) }}"><h4>{{ room.name }}</h4></a>
-  </li>
+    <li class="list-group-item list-group-item-secondary">
+      <a href="{{ url_for('view_room', room_id=room.id) }}"><h4>{{ room.name }}</h4></a>
+    </li>
   {% endfor %}
   </ul>
 
-<p><a href="{{ url_for('add_room', collection_id=collection.id) }}" class="btn btn-success btn-lg">Add a Room</a></p>
-{% else %}
-<h4>You don't have any rooms in your collection yet! Add your first room.</h4>
-<p><a href="{{ url_for('add_room', collection_id=collection.id) }}" class="btn btn-success btn-lg">Add a Room</a></p>
-{% endif %}
+  <p><a href="{{ url_for('add_room', collection_id=collection.id) }}" class="btn btn-success btn-lg">Add a Room</a></p>
+  {% else %}
+  <h4>You don't have any rooms in your collection yet! Add your first room.</h4>
+  <p><a href="{{ url_for('add_room', collection_id=collection.id) }}" class="btn btn-success btn-lg">Add a Room</a></p>
+  {% endif %}
+</div>
 
 {% endblock %}

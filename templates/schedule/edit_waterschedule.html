@@ -4,14 +4,13 @@
 
 {% block content %}
 
-<h1>Edit Water Schedule For {{ plant.name }} </h1>
 
-<p>You can use this form to toggle the water schedule to manual or off manual mode, or simply change the number of days until the next water date.</p>
-
-<p>Toggling the plant watering schedule to manual will only remind you to water on the interval of days you specify below. It is reccomended not to toggle the schedule to manual if you want the schdule to adjust manually for seasonal changes. You can turn off manual mode at any time.</p>
-
-
-<form method="POST" enctype="multipart/form-data">
+<div class="col-6 text-left">
+  <h2>Edit Water Schedule For {{ plant.name }} </h2>
+  <p>You can use this form to toggle the water schedule between manual mode or algorithm mode.</p>
+  <p>To view the plant's current water interval, check manual mode. You can manually adjust the current water interval if needed, then uncheck the manual mode box and save to resume the algorithm calculations with the adjusted interval.</p>
+  <p>Toggling the plant watering schedule to manual will only remind you to water on the interval of days you specify below. If you want the schedule to adjust automatically for seasonal changes make sure manual mode is unchecked when you save changes.</p>
+  <form method="POST" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
     <div class="mb-3">
       {{ form.manual_mode.label(class_="form-lable")}}
@@ -31,8 +30,11 @@
       </small>
       {% endfor %}
     </div>
-    <a class="btn btn-secondary" href="{{ url_for('view_plant', plant_id=plant.id) }}">Cancel</a>
-    <button class="btn btn-success" type="submit">Edit</button>
+    <div class="d-flex justify-content-between">
+      <button class="btn btn-success" type="submit">Save</button>
+      <a class="btn btn-secondary" href="{{ url_for('view_plant', plant_id=plant.id) }}">Cancel</a>
+    </div>
   </form>
+</div>
 
 {% endblock %}

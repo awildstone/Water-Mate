@@ -4,13 +4,12 @@
 
 {% block content %}
 
-<h1>Add a new Plant</h1>
-
-<p>Please use the form below to add a new plant to your {{ room.name }} (room).</p>
-<p>You are encouraged to upload an image of your plant to help keep track of which plant it is, but this is not required.</p>
-<p>Make sure that you use a descriptive name to identify your plant (this can be a nickname you gave it, or the specific species or common name of the plant.)</p>
-
-<form method="POST" enctype="multipart/form-data">
+<div class="col-6 text-left">
+  <h2>Add a new Plant</h2>
+  <p>Please use the form below to add a new plant to your {{ room.name }}.</p>
+  <p>You are encouraged to upload an image of your plant to help keep track of which plant it is, but this is not required.</p>
+  <p>Make sure that you use a descriptive name to identify your plant - this can be a nickname you gave it, the specific species, or common name of the plant.</p>
+  <form method="POST" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
     {% for field in form if field.widget.input_type != 'hidden' %}
     <div class="mb-3">
@@ -21,8 +20,11 @@
       {% endfor %}
     </div>
     {% endfor %}
-    <a href="{{ url_for('view_room', room_id=room.id) }}" class="btn btn-secondary">Cancel</a>
-    <button class="btn btn-success" type="submit">Add Plant</button>
+    <div class="d-flex justify-content-between">
+      <button class="btn btn-success" type="submit">Save</button>
+      <a href="{{ url_for('view_room', room_id=room.id) }}" class="btn btn-secondary">Cancel</a>
+    </div>
   </form>
+</div>
 
 {% endblock %}

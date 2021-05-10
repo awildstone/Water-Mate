@@ -3,7 +3,7 @@
 import os
 import shutil
 from flask import Flask, render_template, request, json, jsonify, flash, redirect, session, g, url_for, send_from_directory
-# from flask_debugtoolbar import DebugToolbarExtension #keep only for development
+# from flask_debugtoolbar import DebugToolbarExtension #for development only
 from sqlalchemy.exc import IntegrityError
 from functools import wraps
 from models import db, connect_db, Collection, Room, User, LightType, LightSource, PlantType, Plant, WaterSchedule, WaterHistory
@@ -500,8 +500,6 @@ def add_lightsource(room_id):
         if form.validate_on_submit():
             try:
                 #types arrive as a list of ORM objects
-                light_types = form.light_type.data
-                # print(request.form.to_dict)
                 for light in light_types:
                     #we will set the daily_total to the default 8 hours for now.
                     room.lightsources.append(LightSource(type=light.type, type_id=light.id, room_id=room_id))
@@ -510,7 +508,7 @@ def add_lightsource(room_id):
             except IntegrityError:
                 flash('You already added this lightsource to this room!', 'warning')
 
-            return redirect(url_for('view_room', room_id=room_id))
+            return redirect(url_for('view_room', room_id=room_id, current=curr_ls))
     else:
         flash('Access Denied.', 'danger')
         return redirect(url_for('view_collection', collection_id=collection.id))
@@ -639,8 +637,12 @@ def edit_plant(plant_id):
 
     plant = Plant.query.get_or_404(plant_id)
     form = EditPlantForm(obj=plant)
+    form.plant_type.data = PlantType.query.get(plant.type_id)
+    form.light_source.data = LightSource.query.get(plant.light_id)
+
     room = Room.query.get_or_404(plant.room_id)
     collection = Collection.query.get_or_404(room.collection_id)
+
     #set the light_source query for the form
     form.light_source.query = LightSource.query.filter_by(room_id=room.id).all()
 

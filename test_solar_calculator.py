@@ -46,8 +46,8 @@ class TestSolarCalculator(TestCase):
     def test_generate_dates(self):
         """Test generating a list of date objects."""
 
-        list1 = self.test1.generate_dates(self.test1.current_date, self.test1.water_interval)
-        list2 = self.test2.generate_dates(self.test2.current_date, self.test2.water_interval)
+        list1 = self.test1.generate_dates()
+        list2 = self.test2.generate_dates()
 
         self.assertEqual(len(list1), 10)
         self.assertEqual(len(list2), 21)

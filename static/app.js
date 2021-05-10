@@ -1,5 +1,5 @@
-// const BASE_URL = 'http://127.0.0.1:5000/'; //development
-const BASE_URL = 'https://water-mate.herokuapp.com/' //production
+const BASE_URL = 'http://127.0.0.1:5000/'; //development
+// const BASE_URL = 'https://water-mate.herokuapp.com/' //production
 
 /* Selector for the Edit Water Schedule form and Watering Interval Formfield
 If the box is checked, shows the field. If the box is not checked hides the field. */

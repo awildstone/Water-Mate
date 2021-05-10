@@ -4,15 +4,23 @@
 
 {% block content %}
 
-<h1>{{ lightsource.type }} Light</h1>
-<h4>Your {{ lightsource.type }} Light has the following plants using this light source:</h4>
+<div class="col-6 mx-auto">
+  <h1>{{ lightsource.type }} Light</h1>
+  <p>Your {{ lightsource.type }} Light has the following plants using this light source:</p>
 
-<ul class="list-group m-3">
+  <ul class="list-group m-3">
     {% for plant in plants %}
     <li class="list-group-item list-group-item-secondary"><a href="{{ url_for('view_plant', plant_id=plant.id)}}">{{ plant.name }}</a></li>
     {% endfor %}
   </ul>
-
-<p><form method="POST" action="{{ url_for('delete_lightsource', lightsource_id=lightsource.id) }}"><button class="btn btn-danger m-2">Delete {{ lightsource.type }} Light</button></form></p>
+  <div class="row">
+    <div class="col">
+      <a class="btn btn-info" href="{{url_for('view_room', room_id=lightsource.room_id)}}">Room</a>
+    </div>
+    <div class="col">
+      <form method="POST" action="{{ url_for('delete_lightsource', lightsource_id=lightsource.id) }}"><button class="btn btn-danger">Delete {{ lightsource.type }}</button></form>
+    </div>
+  </div>
+</div>
 
 {% endblock %}

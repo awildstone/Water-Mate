@@ -4,11 +4,10 @@
 
 {% block content %}
 
-<h1>Edit {{ plant.name }}</h1>
-
-<p>Please enter the new details of your plant. All fields except for image upload are required.</p>
-
-<form method="POST" enctype="multipart/form-data">
+<div class="col-6 text-left">
+  <h2>Edit {{ plant.name }}</h2>
+  <p>Please enter the new details of your plant. All fields except for image upload are required.</p>
+  <form method="POST" enctype="multipart/form-data">
   {{ form.hidden_tag() }}
     {% for field in form if field.widget.input_type != 'hidden' %}
     <div class="mb-3">
@@ -19,7 +18,10 @@
       {% endfor %}
     </div>
     {% endfor %}
-    <a href="{{ url_for('view_plant', plant_id=plant.id) }}" class="btn btn-secondary">Cancel</a>
-    <button class="btn btn-success" type="submit">Edit Plant</button>
+    <div class="d-flex justify-content-between">
+      <button class="btn btn-success" type="submit">Save</button>
+      <a href="{{ url_for('view_plant', plant_id=plant.id) }}" class="btn btn-secondary">Cancel</a>
+    </div>
   </form>
+</div>
 {% endblock %}

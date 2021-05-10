@@ -8,7 +8,7 @@
 
 {% if collections %}
 <p>Welcome to the dashboard, {{ user.name }}. View, or edit your collection(s).</p>
-<p><a href="{{ url_for('add_collection') }}" class="btn btn-success">Add a Collection</a></p>
+<p><a href="{{ url_for('add_collection') }}" class="btn btn-success">Add Collection</a></p>
 
   {% for collection in collections %}
     <div class="card col bg-light m-4">
@@ -16,7 +16,6 @@
     <div class="col">
       <a href="{{ url_for('add_room', collection_id=collection.id) }}" class="card-link btn btn-success">Add Room</a>
       <a href="{{ url_for('edit_collection', collection_id=collection.id) }}" class="card-link btn btn-warning m-2">Edit {{ collection.name }}</a>
-      <form method="POST" action="{{ url_for('delete_collection', collection_id=collection.id)}}" style="display: inline;"><button class="btn btn-danger m-2">Delete {{ collection.name }}</button></form>
     </div>
 
     <div class="row text-left">
@@ -25,9 +24,6 @@
         <div class="card mx-auto m-2" style="width: 18rem;">
           <div class="card-body">
             <h4 class="card-title"><a href="{{ url_for('view_room', room_id=room.id) }}">{{ room.name }}</a></h4>
-            <a href="{{ url_for('view_room', room_id=room.id) }}" class="card-link btn btn-info btn-sm">View</a>
-            <a href="{{ url_for('edit_room', room_id=room.id) }}" class="card-link btn btn-warning btn-sm">Edit</a>
-            <form method="POST" action="{{ url_for('delete_room', room_id=room.id) }}" class="card-link" style="display: inline;"><button class="btn btn-danger btn-sm">Delete</button></form>
           </div>
           <div class="card-body list-group-item-secondary">
             <h5>Light Sources</h5>

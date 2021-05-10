@@ -4,22 +4,25 @@
 
 {% block content %}
 
-<h1>Add Light Source</h1>
 
+<div class="col-6 text-left">
+<h2>Add Light Source</h2>
 <p>Select all Light Sources that are applicable in your room.</p>
-
 <form method="POST">
     {{ form.hidden_tag() }}
-    {% for field in form if field.widget.input_type != 'hidden' %}
-    <div class="mb-3">
-      {{ field.label }}
-      {{ field(class_="form-control") }}
-      {% for error in field.errors %}
-      <small class="form-text text-danger">{{ error }}</small>
-      {% endfor %}
-    </div>
+    <div class="form-check-lable mb-3">
+      {{ form.light_type.label }}
+      {{ form.light_type(class_="form-check-lable") }}
+      {% for error in form.light_type.errors %}
+      <small class="form-text text-danger">
+          {{ error }}
+      </small>
     {% endfor %}
+    </div>
+    <div class="d-flex justify-content-between">
+      <button class="btn btn-success" type="submit">Save</button>
     <a href="{{ url_for('view_room', room_id=room.id) }}" class="btn btn-secondary">Cancel</a>
-    <button class="btn btn-success" type="submit">Add Light Sources</button>
+  </div>
   </form>
+</div>
 {% endblock %}

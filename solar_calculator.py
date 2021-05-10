@@ -17,13 +17,13 @@ class SolarCalculator:
         self.water_interval = water_interval
         self.light_type = light_type
 
-    def generate_dates(self, current_date, water_interval):
+    def generate_dates(self):
         """Generate and return a list of dates starting with the day after the current date
         and ending at the water_interval count."""
 
         dates = []
-        for i in range(1, water_interval + 1):
-            date = current_date + timedelta(days=i)
+        for i in range(1, self.water_interval + 1):
+            date = self.current_date + timedelta(days=i)
             dates.append(date)
 
         return dates
@@ -105,7 +105,7 @@ class SolarCalculator:
         [{"date": date, "sunrise": sunrise, "sunset": sunset, "day_length": day_length, "solar_noon": solar_noon}, {etc.]"""
 
         solar_schedule = []
-        dates = self.generate_dates(self.current_date, self.water_interval)
+        dates = self.generate_dates()
 
         for day in dates:
             data = self.get_data(day)
@@ -138,6 +138,9 @@ class SolarCalculator:
         day_lengths = [date['day_length'] for date in solar_forcast]
 
         plant_max_daily_light = []
+
+        #put this in its own method, pull out the decimals as constants
+        #create a contstants.py file
 
         for i in range(len(solar_forcast)):
             nh_light_calculations = {

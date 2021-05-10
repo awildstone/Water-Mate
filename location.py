@@ -1,8 +1,8 @@
 import os
 import requests, json
-# from keys import MAPQUEST_KEY #for production testing
+from keys import MAPQUEST_KEY #for development testing
 
-MAPQUEST_KEY = os.getenv('MAPQUEST_KEY')
+# MAPQUEST_KEY = os.getenv('MAPQUEST_KEY') # for production
 
 BASE_URL = f'http://open.mapquestapi.com/geocoding/v1/address?key={MAPQUEST_KEY}'
 

@@ -4,12 +4,10 @@
 
 {% block content %}
 
-<h1>Add a new Room</h1>
-
-<p>Please enter the name of your new Room.</p>
-<p>Your room name can be anything you want (Kitchen, Bedroom, Bathroom, etc.) but the name must be unique.</p>
-
-<form method="POST">
+<div class="col-6 text-left">
+  <h2>Add a new Room</h2>
+  <p>Your room name can be anything you want (Kitchen, Bedroom, Bathroom, etc.) but the name must be unique.</p>
+  <form method="POST">
     {{ form.hidden_tag() }}
     {% for field in form if field.widget.input_type != 'hidden' %}
     <div class="mb-3">
@@ -20,7 +18,10 @@
       {% endfor %}
     </div>
     {% endfor %}
-    <a href="{{ url_for('view_collection', collection_id=collection_id) }}" class="btn btn-secondary">Cancel</a>
-    <button class="btn btn-success" type="submit">Add Room</button>
+    <div class="d-flex justify-content-between">
+      <button class="btn btn-success" type="submit">Save</button>
+      <a href="{{ url_for('view_collection', collection_id=collection_id) }}" class="btn btn-secondary">Cancel</a>
+    </div>
   </form>
+</div>
 {% endblock %}
