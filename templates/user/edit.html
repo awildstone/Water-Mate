@@ -4,9 +4,9 @@
 
 {% block content %}
 
-<h1>Edit {{ user.name }}'s Profile</h1>
-
-<form method="POST">
+<div class="col-6 text-left">
+  <h2>Edit {{ user.name }}'s Profile</h2>
+  <form method="POST">
     {{ form.hidden_tag() }}
     {% for field in form if field.widget.input_type != 'hidden' and field.name != 'password' %}
     <div class="mb-3">
@@ -27,10 +27,12 @@
       {% endfor %}
     {% endif %}
     {{ form.password(placeholder="Enter your password to confirm", class="form-control") }}
-
-    <a href="{{ url_for('view_profile') }}" class="btn btn-secondary m-2">Cancel</a>
-    <button class="btn btn-success m-2" type="submit">Update Profile</button>
+    <div class="d-flex justify-content-between">
+      <button class="btn btn-success m-2" type="submit">Save</button>
+      <a href="{{ url_for('view_profile') }}" class="btn btn-secondary m-2">Cancel</a>
+    </div>
   </form>
+</div>
 
 
 {% endblock %}

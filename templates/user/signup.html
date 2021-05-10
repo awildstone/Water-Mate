@@ -4,12 +4,11 @@
 
 {% block content %}
 
-<h1>Signup</h1>
-
-<p>Please enter your City, State/Territory, Country, or City, State/Territory, or City, Country to calculate an accurate geolocation.</p>
-<p>Name, email, username, and password are all required to create an account.</p>
-
-<form class="m-5" method="POST">
+<div class="col-6 text-left">
+  <h2>Signup</h2>
+  <p>Please enter your City, State/Territory, Country, or City, State/Territory, or City, Country to calculate an accurate geolocation.</p>
+  <p>Name, email, username, and password are all required to create an account.</p>
+  <form class="m-2" method="POST">
     {{ form.hidden_tag() }}
     {% for field in form if field.widget.input_type != 'hidden' %}
     <div class="mb-3">
@@ -20,6 +19,7 @@
       {% endfor %}
     </div>
     {% endfor %}
-    <button class="btn btn-success" type="submit">Create Account</button>
+    <button class="btn btn-success" type="submit">Submit</button>
   </form>
+</div>
 {% endblock %}

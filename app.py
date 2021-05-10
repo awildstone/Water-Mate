@@ -500,6 +500,7 @@ def add_lightsource(room_id):
         if form.validate_on_submit():
             try:
                 #types arrive as a list of ORM objects
+                light_types = form.light_type.data
                 for light in light_types:
                     #we will set the daily_total to the default 8 hours for now.
                     room.lightsources.append(LightSource(type=light.type, type_id=light.id, room_id=room_id))
@@ -508,7 +509,7 @@ def add_lightsource(room_id):
             except IntegrityError:
                 flash('You already added this lightsource to this room!', 'warning')
 
-            return redirect(url_for('view_room', room_id=room_id, current=curr_ls))
+            return redirect(url_for('view_room', room_id=room_id))
     else:
         flash('Access Denied.', 'danger')
         return redirect(url_for('view_collection', collection_id=collection.id))

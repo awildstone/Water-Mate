@@ -15,7 +15,7 @@
     {% endfor %}
   </ul>
 
-  <p><a href="{{ url_for('add_lightsource', room_id=room.id) }}" class="btn btn-success">Add a Light Source</a></p>
+  <p><a href="{{ url_for('add_lightsource', room_id=room.id) }}" class="btn btn-success">Add Lighsource</a></p>
 
   {% if plants %}
   <h4>Your {{ room.name }} has the following plants:</h4>
@@ -26,10 +26,10 @@
     {% endfor %}
   </ul>
 
-  <p><a href="{{ url_for('add_plant', room_id=room.id) }}" class="btn btn-success">Add a Plant</a></p>
+  <p><a href="{{ url_for('add_plant', room_id=room.id) }}" class="btn btn-success">Add Plant</a></p>
   {% else %}
   <h4>Add plants to this room:</h4>
-  <p><a href="{{ url_for('add_plant', room_id=room.id) }}" class="btn btn-success">Add a Plant</a></p>
+  <p><a href="{{ url_for('add_plant', room_id=room.id) }}" class="btn btn-success">Add Plant</a></p>
   {% endif %}
 
   <div class="row m-4">
@@ -46,7 +46,7 @@
 
   {% else %}
   <h4>Add lightsources to your room:</h4>
-  <p><a href="{{ url_for('add_lightsource', room_id=room.id) }}" class="btn btn-success">Add a Light Source</a></p>
+  <p><a href="{{ url_for('add_lightsource', room_id=room.id) }}" class="btn btn-success">Add Lightsource</a></p>
   {% endif %}
 </div>
 

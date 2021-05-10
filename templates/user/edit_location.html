@@ -4,12 +4,11 @@
 
 {% block content %}
 
-<h1>Edit Your Location</h1>
-
-<p>Please enter your City, State/Territory, Country, or City, State/Territory, or City, Country to calculate an accurate geolocation.</p>
-<p><span class="text-danger">WARNING</span>: this will change how Water Mate calculates the water schedule for all of your plants.</p>
-
-<form method="POST">
+<div class="col-6 text-left">
+  <h2>Edit Your Location</h2>
+  <p>Please enter your City, State/Territory, Country, or City, State/Territory, or City, Country to calculate an accurate geolocation.</p>
+  <p><span class="text-danger">WARNING</span>: this will change how Water Mate calculates the water schedule for all of your plants.</p>
+  <form method="POST">
     {{ form.hidden_tag() }}
 
     {% for field in form if field.widget.input_type != 'hidden' %}
@@ -21,9 +20,11 @@
       {% endfor %}
     </div>
     {% endfor %}
- 
-    <a href="{{ url_for('view_profile') }}" class="btn btn-secondary m-2">Cancel</a>
-    <button class="btn btn-success m-2" type="submit">Update Location</button>
+    <div class="d-flex justify-content-between">
+      <button class="btn btn-success m-2" type="submit">Save</button>
+      <a href="{{ url_for('view_profile') }}" class="btn btn-secondary m-2">Cancel</a>
+    </div>
   </form>
+</div>
 
 {% endblock %}
