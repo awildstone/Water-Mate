@@ -1,6 +1,7 @@
 """Flask App for Water Mate."""
 
 import os
+from dotenv import load_dotenv
 import shutil
 from flask import Flask, render_template, request, json, jsonify, flash, redirect, session, g, url_for, send_from_directory
 # from flask_debugtoolbar import DebugToolbarExtension #for development only
@@ -13,6 +14,7 @@ from location import UserLocation
 from datetime import datetime, timedelta
 from water_calculator import WaterCalculator
 
+load_dotenv()  # take environment variables from .env.
 CURRENT_USER_KEY = 'current_user'
 UPLOAD_FOLDER = 'uploads/user'
 
@@ -26,7 +28,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = uri
 # app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False # for development only
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'J28r$CC&Z5NCN48O$CEe&749k')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0 #Disables Flask file caching
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # toolbar = DebugToolbarExtension(app) # for development only
