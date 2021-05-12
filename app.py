@@ -13,10 +13,13 @@ from werkzeug.utils import secure_filename
 from location import UserLocation
 from datetime import datetime, timedelta
 from water_calculator import WaterCalculator
+import boto3
+from botocore.exceptions import ClientError
 
 load_dotenv()  # take environment variables from .env.
 CURRENT_USER_KEY = 'current_user'
-UPLOAD_FOLDER = 'uploads/user'
+UPLOAD_FOLDER = os.getenv('S3_LOCATION')
+BUCKET_NAME = os.getenv('S3_BUCKET')
 
 app = Flask(__name__)
 
@@ -33,6 +36,7 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0 #Disables Flask file caching
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # toolbar = DebugToolbarExtension(app) # for development only
 
+#connect app
 connect_db(app)
 
 ####################
@@ -125,8 +129,12 @@ def signup():
                 )
                 db.session.commit()
 
-                #create an uploads file directory for this user
-                os.makedirs(f'{UPLOAD_FOLDER}/{new_user.id}')
+                #create a new uploads directory (key) in S3 bucket for this user
+                #connnect as client to create a new key
+                s3 = boto3.client('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'), aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
+                new_directory_name = f'uploads/user/{new_user.id}/'
+                s3.put_object(Bucket=BUCKET_NAME, Key=(new_directory_name))
+
                 #add the new user to session
                 session[CURRENT_USER_KEY] = new_user.id
 
@@ -274,12 +282,16 @@ def delete_profile():
             db.session.delete(plant)
             db.session.commit()
 
+        #delete the user's files and uploads directory (key) from the S3 bucket
+        s3 = boto3.resource('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'), aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
+        bucket = s3.Bucket(BUCKET_NAME)
+        for key in bucket.objects.filter(Prefix=f'uploads/user/{g.user.id}/'):
+            print(key)
+            key.delete()
+
         #try to delete the user
         db.session.delete(g.user)
         db.session.commit()
-
-        #delete user's uploads folder & files
-        shutil.rmtree(f'{UPLOAD_FOLDER}/{g.user.id}')
 
         #delete user session
         if CURRENT_USER_KEY in session:
@@ -379,7 +391,7 @@ def delete_collection(collection_id):
             db.session.commit()
             flash('Collection Deleted.', 'success')
         except IntegrityError:
-            flash('You cannot delete a collection that has rooms!', 'warning')
+            flash('You cannot delete a collection that has plants!', 'warning')
     else:
         flash('Access Denied.', 'danger')
     
@@ -580,10 +592,18 @@ def view_plant(plant_id):
         flash('Access Denied.', 'danger')
         return redirect(url_for('view_collection', collection_id=collection_id))
 
-@app.route('/uploads/user/<path:filename>')
-def download_file(filename):
-    """Downloads the image from the respective user upload folder."""
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+def post_s3(bucket, key, img):
+    """A helper method to POST an image to S3 bucket."""
+    try:
+        # Connect to s3 account using account credentials. We will use this connection to connection securely to our 
+        # s3 account to create new user upload directories and upload user images.
+        s3 = boto3.resource('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'), aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
+        # upload the image in the specified folder(key)
+        s3.Bucket(bucket).put_object(Key=key+img.filename, Body=img)
+        #if successful return the new img url
+        return f'{UPLOAD_FOLDER}{g.user.id}/{img.filename}'
+    except ClientError as e:
+        return None
 
 @app.route('/collection/rooms/<int:room_id>/add-plant', methods=['GET', 'POST'])
 @auth_required
@@ -598,28 +618,29 @@ def add_plant(room_id):
 
     if g.user.id == collection.user_id:
         if form.validate_on_submit():
-            img = form.image.data
-            #securely validate image (if included)
-            if img:
-                filename = secure_filename(img.filename)
-                img.save(os.path.join(f'{UPLOAD_FOLDER}/{g.user.id}', filename))
+            print(request.values)
+            img = request.files['image']
+            #if the image exists, securely upload to user's s3 bucket
+            if img.filename:
+                key = f'uploads/user/{g.user.id}/'
+                url = post_s3(bucket=BUCKET_NAME, key=key, img=img)
 
                 new_plant = Plant(
                     name=form.name.data,
-                    image = f'{g.user.id}/{filename}',
+                    image=url,
                     user_id=g.user.id,
-                    type_id=form.plant_type.id,
+                    type_id=form.plant_type.data.id,
                     room_id=room.id,
                     light_id=form.light_source.data.id)
             else:
                 new_plant = Plant(
                     name=form.name.data,
-                    image=img,
+                    image=None,
                     user_id=g.user.id,
                     type_id=form.plant_type.data.id,
                     room_id=room.id,
                     light_id=form.light_source.data.id)
-
+            print(new_plant)
             room.plants.append(new_plant)
             db.session.commit()
 
@@ -652,20 +673,22 @@ def edit_plant(plant_id):
 
     if g.user.id == plant.user_id:
         if form.validate_on_submit():
-            #securely validate image (if included)
-            img = form.image.data
-            if img != plant.image:
-                filename = secure_filename(img.filename)
-                img.save(os.path.join(f'{UPLOAD_FOLDER}/{g.user.id}', filename))
-                plant.image = f'{g.user.id}/{filename}'
-            
+            #if the image exists, securely upload to user's s3 bucket
+            img = request.files['image']
+            if img:
+                key = f'uploads/user/{g.user.id}/'
+                url = post_s3(bucket=BUCKET_NAME, key=key, img=img)
+                #set the new plant url from the upload
+                plant.image = url
+      
+            #update the rest of the plant's data from the form
             plant.name = form.name.data
             plant.type_id = form.plant_type.data.id
             plant.light_id = form.light_source.data.id
             db.session.commit()
 
             #reset the plant's water_schedule to reflect any changes in type or location but do not change the last water date.
-            water_schedule = WaterSchedule.query.get_or_404(plant.id)
+            water_schedule = WaterSchedule.query.filter_by(plant_id=plant.id).first()
             plant_type = PlantType.query.get_or_404(plant.type_id)
             water_schedule.water_interval = plant_type.base_water
             water_schedule.next_water_date = water_schedule.water_date + timedelta(days=plant_type.base_water)
@@ -689,6 +712,15 @@ def delete_plant(plant_id):
     collection = Collection.query.get_or_404(room.collection_id)
 
     if g.user.id == plant.user_id:
+        #This isn't working yet. I don't want to accidentally delete the main key/directory
+        # if not '/static/img/succulents.png' in plant.image:
+        #     #the img is hosted in s3 so we need to delete the image.
+        #     s3 = boto3.resource('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'), aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
+        #     bucket = s3.Bucket(BUCKET_NAME)
+        #     for key in bucket.objects.filter(Prefix=f'uploads/user/{g.user.id}/'):
+        #         if key.key in plant.image:
+        #             print(key.key)
+
         db.session.delete(plant)
         db.session.commit()
         flash('Plant Deleted.', 'success')

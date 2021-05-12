@@ -1,17 +1,16 @@
 """User View tests."""
 
-# FLASK_ENV=production python -m unittest test_user_views.py
+# FLASK_ENV=production python3 -m unittest test_user_views.py
 
 import os
-import shutil
 from unittest import TestCase
-from models import db, connect_db, User, Collection, Room, LightSource, Plant
+from models import *
 from decimal import *
 
 #set DB environment to test DB
 os.environ['DATABASE_URL'] = 'postgresql:///water_mate_test'
 
-from app import app, CURRENT_USER_KEY, UPLOAD_FOLDER
+from app import *
 
 #disable WTForms CSRF validation
 app.config['WTF_CSRF_ENABLED'] = False
@@ -24,24 +23,26 @@ class TestUserViews(TestCase):
 
         self.client = app.test_client()
 
-        #delete user's uploads folder & files
-        if os.path.isdir(f'{UPLOAD_FOLDER}/{10}'):
-            shutil.rmtree(f'{UPLOAD_FOLDER}/{10}')
-
-        if os.path.isdir(f'{UPLOAD_FOLDER}/{12}'):
-            shutil.rmtree(f'{UPLOAD_FOLDER}/{12}')
+        db.session.rollback()
+        db.session.remove()
 
         #delete any old data from the tables
+        db.session.query(WaterHistory).delete()
+        db.session.commit()
+
+        db.session.query(WaterSchedule).delete()
+        db.session.commit()
+
         db.session.query(Plant).delete()
+        db.session.commit()
+
+        db.session.query(Collection).delete()
         db.session.commit()
 
         db.session.query(LightSource).delete()
         db.session.commit()
 
         db.session.query(Room).delete()
-        db.session.commit()
-
-        db.session.query(Collection).delete()
         db.session.commit()
 
         db.session.query(User).delete()
@@ -57,8 +58,7 @@ class TestUserViews(TestCase):
             password='meowmeow')
 
         self.user1.id = 10
-        if not os.path.isdir(f'{UPLOAD_FOLDER}/{self.user1.id}'):
-            os.makedirs(f'{UPLOAD_FOLDER}/{self.user1.id}')
+        db.session.commit()
 
         self.user2 = User.signup(
             name='Kittenz Meow',
@@ -69,9 +69,6 @@ class TestUserViews(TestCase):
             password='meowmeow')
 
         self.user2.id = 12
-        if not os.path.isdir(f'{UPLOAD_FOLDER}/{self.user2.id}'):
-            os.makedirs(f'{UPLOAD_FOLDER}/{self.user2.id}')
-
         db.session.commit()
 
         #set up test collections
@@ -123,7 +120,7 @@ class TestUserViews(TestCase):
             res = c.get('/dashboard')
 
             self.assertEqual(res.status_code, 200)
-            self.assertIn('Welcome to the dashboard, Kittenz Meow. View, or edit your collection(s).', str(res.data))
+            self.assertIn('Welcome to the dashboard, Kittenz Meow.', str(res.data))
             self.assertIn('My House', str(res.data))
             self.assertIn('Bedroom', str(res.data))
             self.assertIn('Southwest', str(res.data))
@@ -158,7 +155,7 @@ class TestUserViews(TestCase):
             self.assertIn('Kittenz Meow', str(res.data))
             self.assertIn('kittenz@gmail.com', str(res.data))
             self.assertIn('kittenz', str(res.data))
-            self.assertIn('Update Profile', str(res.data))
+            self.assertIn('Save', str(res.data))
     
     def test_edit_profile(self):
         """Test that the user profile is edited on submission."""
@@ -189,7 +186,7 @@ class TestUserViews(TestCase):
             self.assertIn('Current Password', str(res.data))
             self.assertIn('New Password', str(res.data))
             self.assertIn('Confirm New Password', str(res.data))
-            self.assertIn('Update Password', str(res.data))
+            self.assertIn('Save', str(res.data))
     
     def test_edit_password(self):
         """Test a user's password is updated on submission."""
@@ -219,7 +216,7 @@ class TestUserViews(TestCase):
             self.assertIn('City', str(res.data))
             self.assertIn('State/Territory', str(res.data))
             self.assertIn('Country', str(res.data))
-            self.assertIn('Update Location', str(res.data))
+            self.assertIn('Save', str(res.data))
     
     def test_edit_location(self):
         """Test that a user's location is updated on form submission."""

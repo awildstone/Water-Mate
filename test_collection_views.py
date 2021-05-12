@@ -1,16 +1,16 @@
 """Collection View Tests."""
 
-# FLASK_ENV=production python -m unittest test_collection_views.py
+# FLASK_ENV=production python3 -m unittest test_collection_views.py
 
 import os
-import shutil
+from dotenv import load_dotenv
 from unittest import TestCase
-from models import db, connect_db, User, Collection, Room, Plant, LightSource
+from models import *
 
 #set DB environment to test DB
 os.environ['DATABASE_URL'] = 'postgresql:///water_mate_test'
 
-from app import app, CURRENT_USER_KEY, UPLOAD_FOLDER
+from app import *
 
 #disable WTForms CSRF validation
 app.config['WTF_CSRF_ENABLED'] = False
@@ -23,24 +23,26 @@ class TestCollectionViews(TestCase):
 
         self.client = app.test_client()
 
-        #delete user's uploads folder & files
-        if os.path.isdir(f'{UPLOAD_FOLDER}/{10}'):
-            shutil.rmtree(f'{UPLOAD_FOLDER}/{10}')
+        db.session.rollback()
+        db.session.remove()
 
-        if os.path.isdir(f'{UPLOAD_FOLDER}/{12}'):
-            shutil.rmtree(f'{UPLOAD_FOLDER}/{12}')
+        #delete any old data from the tables
+        db.session.query(WaterHistory).delete()
+        db.session.commit()
 
-       #delete any old data from the tables
+        db.session.query(WaterSchedule).delete()
+        db.session.commit()
+
         db.session.query(Plant).delete()
         db.session.commit()
 
         db.session.query(Collection).delete()
         db.session.commit()
 
-        db.session.query(Room).delete()
+        db.session.query(LightSource).delete()
         db.session.commit()
 
-        db.session.query(LightSource).delete()
+        db.session.query(Room).delete()
         db.session.commit()
 
         db.session.query(User).delete()
@@ -56,8 +58,7 @@ class TestCollectionViews(TestCase):
             password='meowmeow')
 
         self.user1.id = 10
-        if not os.path.isdir(f'{UPLOAD_FOLDER}/{self.user1.id}'):
-            os.makedirs(f'{UPLOAD_FOLDER}/{self.user1.id}')
+        db.session.commit()
 
         self.user2 = User.signup(
             name='Kittenz Meow',
@@ -68,9 +69,6 @@ class TestCollectionViews(TestCase):
             password='meowmeow')
 
         self.user2.id = 12
-        if not os.path.isdir(f'{UPLOAD_FOLDER}/{self.user2.id}'):
-            os.makedirs(f'{UPLOAD_FOLDER}/{self.user2.id}')
-
         db.session.commit()
 
         #set up test collections
@@ -86,7 +84,6 @@ class TestCollectionViews(TestCase):
     
     def tearDown(self):
         """Rollback any sessions."""
-
         db.session.rollback()
         db.session.remove()
     
@@ -129,7 +126,7 @@ class TestCollectionViews(TestCase):
 
             self.assertEqual(res.status_code, 200)
             self.assertIn('Add a new Collection', str(res.data))
-            self.assertIn('Please enter the name of your new Collection.', str(res.data))
+            self.assertIn('Your collection name can be anything you want (Home, Office, My Collection, etc.) but the name must be unique.', str(res.data))
             self.assertIn('Collection Name', str(res.data))
     
     def test_add_new_collection(self):
@@ -141,8 +138,7 @@ class TestCollectionViews(TestCase):
             
             res = c.post('/collections/add-collection', data={'name': 'My Home', 'user_id': self.user2.id}, follow_redirects=True)
 
-
-            collection = Collection.query.filter_by(user_id=self.user2.id).first()
+            collection = Collection.query.filter_by(user_id=12).first()
 
             self.assertEqual(res.status_code, 200)
             self.assertEqual(collection.name, 'My Home')
@@ -184,21 +180,30 @@ class TestCollectionViews(TestCase):
             
             res = c.post('/collections/2/delete', follow_redirects=True)
 
-            collections = Collection.query.filter_by(user_id=self.user1.id).all()
+            collections = Collection.query.all()
 
             self.assertEqual(res.status_code, 200)
             self.assertEqual(len(collections), 1)
+            self.assertIn('Collection Deleted.', str(res.data))
     
-    def test_delete_collection_with_room(self):
-        """You cannot delete a collection with rooms in it."""
+    def test_delete_collection_with_plants(self):
+        """You cannot delete a collection with plants in it."""
+        light = LightSource(id=1, type='East', type_id=3, daily_total=8, room_id=1)
+        db.session.add(light)
+        db.session.commit()
+
+        plant = Plant(id=1, name='Test', image='/static/img/succulents.png', user_id=10, type_id=28, room_id=1, light_id=1)
+        db.session.add(plant)
+        db.session.commit()
 
         with self.client as c:
             with c.session_transaction() as session:
                 session[CURRENT_USER_KEY] = self.user1.id
-            
+
             res = c.post('/collections/1/delete', follow_redirects=True)
 
-            collections = Collection.query.filter_by(user_id=self.user1.id).all()
+            collections = Collection.query.all()
 
             self.assertEqual(res.status_code, 200)
             self.assertEqual(len(collections), 2)
+            self.assertIn('You cannot delete a collection that has plants!', str(res.data))

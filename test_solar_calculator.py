@@ -1,6 +1,6 @@
 """Solar Calculator Tests."""
 
-#FLASK_ENV=production python -m unittest test_solar_calculator.py
+#FLASK_ENV=production python3 -m unittest test_solar_calculator.py
 
 from unittest import TestCase
 from datetime import date, datetime, timedelta, timezone

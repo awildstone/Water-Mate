@@ -1,16 +1,15 @@
 """Room view tests."""
 
-# FLASK_ENV=production python -m unittest test_room_views.py
+# FLASK_ENV=production python3 -m unittest test_room_views.py
 
 import os
-import shutil
 from unittest import TestCase
-from models import db, connect_db, User, Collection, Room, LightSource, Plant
+from models import *
 
 #set DB environment to test DB
 os.environ['DATABASE_URL'] = 'postgresql:///water_mate_test'
 
-from app import app, CURRENT_USER_KEY, UPLOAD_FOLDER
+from app import *
 
 #disable WTForms CSRF validation
 app.config['WTF_CSRF_ENABLED'] = False
@@ -23,14 +22,16 @@ class TestRoomViews(TestCase):
 
         self.client = app.test_client()
 
-        #delete user's uploads folder & files
-        if os.path.isdir(f'{UPLOAD_FOLDER}/{10}'):
-            shutil.rmtree(f'{UPLOAD_FOLDER}/{10}')
-
-        if os.path.isdir(f'{UPLOAD_FOLDER}/{12}'):
-            shutil.rmtree(f'{UPLOAD_FOLDER}/{12}')
+        db.session.rollback()
+        db.session.remove()
 
         #delete any old data from the tables
+        db.session.query(WaterHistory).delete()
+        db.session.commit()
+
+        db.session.query(WaterSchedule).delete()
+        db.session.commit()
+
         db.session.query(Plant).delete()
         db.session.commit()
 
@@ -56,8 +57,7 @@ class TestRoomViews(TestCase):
             password='meowmeow')
 
         self.user1.id = 10
-        if not os.path.isdir(f'{UPLOAD_FOLDER}/{self.user1.id}'):
-            os.makedirs(f'{UPLOAD_FOLDER}/{self.user1.id}')
+        db.session.commit()
 
         self.user2 = User.signup(
             name='Kittenz Meow',
@@ -68,9 +68,6 @@ class TestRoomViews(TestCase):
             password='meowmeow')
 
         self.user2.id = 12
-        if not os.path.isdir(f'{UPLOAD_FOLDER}/{self.user2.id}'):
-            os.makedirs(f'{UPLOAD_FOLDER}/{self.user2.id}')
-
         db.session.commit()
 
         #set up test collections
@@ -99,7 +96,6 @@ class TestRoomViews(TestCase):
     
     def tearDown(self):
         """Rollback any sessions."""
-
         db.session.rollback()
         db.session.remove()
     
@@ -128,7 +124,7 @@ class TestRoomViews(TestCase):
 
             self.assertEqual(res.status_code, 200)
             self.assertIn('Bathroom', str(res.data))
-            self.assertIn('Add a Light Source', str(res.data))
+            self.assertIn('Add Lightsource', str(res.data))
 
     def test_add_room_form(self):
         """View the add room form."""
@@ -140,8 +136,8 @@ class TestRoomViews(TestCase):
             res = c.get('/collections/1/add-room')
 
             self.assertEqual(res.status_code, 200)
-            self.assertIn('Add a new Room', str(res.data))
-            self.assertIn('Please enter the name of your new Room.', str(res.data))
+            self.assertIn('Save', str(res.data))
+            self.assertIn('Your room name can be anything you want (Kitchen, Bedroom, Bathroom, etc.) but the name must be unique.', str(res.data))
     
     def test_add_room(self):
         """Add a new room."""
@@ -171,7 +167,7 @@ class TestRoomViews(TestCase):
 
             self.assertEqual(res.status_code, 200)
             self.assertIn('Edit Room', str(res.data))
-            self.assertIn('Please enter the new name of your room.', str(res.data))
+            self.assertIn('Your room name can be anything you want but the name must be unique.', str(res.data))
             self.assertIn('Bathroom', str(res.data))
     
     def test_edit_room(self):
@@ -209,7 +205,7 @@ class TestRoomViews(TestCase):
             with c.session_transaction() as session:
                 session[CURRENT_USER_KEY] = self.user1.id
             
-            res = c.post('/collection/rooms/2/delete', follow_redirects=True)
+            res = c.post('/collection/rooms/1/delete', follow_redirects=True)
 
             rooms = Room.query.filter_by(collection_id=1).all()
 

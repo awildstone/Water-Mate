@@ -1,17 +1,18 @@
 """Schedule View Tests."""
 
-# FLASK_ENV=production python -m unittest test_schedule_views.py
+# FLASK_ENV=production python3 -m unittest test_schedule_views.py
 
 import os
-import shutil
+from io import BytesIO
+from dotenv import load_dotenv
 from unittest import TestCase
-from models import db, connect_db, User, Collection, Room, LightSource, Plant, WaterSchedule, WaterHistory
+from models import *
 from datetime import datetime, timedelta, date
 
 #set DB environment to test DB
 os.environ['DATABASE_URL'] = 'postgresql:///water_mate_test'
 
-from app import app, CURRENT_USER_KEY, UPLOAD_FOLDER
+from app import *
 
 #disable WTForms CSRF validation
 app.config['WTF_CSRF_ENABLED'] = False
@@ -24,27 +25,26 @@ class TestScheduleViews(TestCase):
 
         self.client = app.test_client()
 
-        #delete user's uploads folder & files
-        if os.path.isdir(f'{UPLOAD_FOLDER}/{10}'):
-            shutil.rmtree(f'{UPLOAD_FOLDER}/{10}')
-
-        if os.path.isdir(f'{UPLOAD_FOLDER}/{12}'):
-            shutil.rmtree(f'{UPLOAD_FOLDER}/{12}')
+        db.session.rollback()
+        db.session.remove()
 
         #delete any old data from the tables
+        db.session.query(WaterHistory).delete()
+        db.session.commit()
+
         db.session.query(WaterSchedule).delete()
         db.session.commit()
 
         db.session.query(Plant).delete()
         db.session.commit()
 
+        db.session.query(Collection).delete()
+        db.session.commit()
+
         db.session.query(LightSource).delete()
         db.session.commit()
 
         db.session.query(Room).delete()
-        db.session.commit()
-
-        db.session.query(Collection).delete()
         db.session.commit()
 
         db.session.query(User).delete()
@@ -60,8 +60,7 @@ class TestScheduleViews(TestCase):
             password='meowmeow')
 
         self.user1.id = 10
-        if not os.path.isdir(f'{UPLOAD_FOLDER}/{self.user1.id}'):
-            os.makedirs(f'{UPLOAD_FOLDER}/{self.user1.id}')
+        db.session.commit()
 
         self.user2 = User.signup(
             name='Kittenz Meow',
@@ -72,9 +71,6 @@ class TestScheduleViews(TestCase):
             password='meowmeow')
 
         self.user2.id = 12
-        if not os.path.isdir(f'{UPLOAD_FOLDER}/{self.user2.id}'):
-            os.makedirs(f'{UPLOAD_FOLDER}/{self.user2.id}')
-
         db.session.commit()
 
         #set up test collections
@@ -97,9 +93,14 @@ class TestScheduleViews(TestCase):
     
     def tearDown(self):
         """Rollback any sessions."""
-
         db.session.rollback()
         db.session.remove()
+
+        #delete the s3 folders that were created for test_create_water_schedule
+        s3 = boto3.resource('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'), aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
+        bucket = s3.Bucket(BUCKET_NAME)
+        for key in bucket.objects.filter(Prefix=f'uploads/user/{10}/'):
+            key.delete()
     
     def test_create_water_schedule(self):
         """Test that a new water schedule is created when a new plant is created."""
@@ -107,8 +108,10 @@ class TestScheduleViews(TestCase):
         with self.client as c:
             with c.session_transaction() as session:
                 session[CURRENT_USER_KEY] = self.user1.id
+            with open('/Users/aimeewildstone/Desktop/rdt.png', 'rb') as img:
+                imgStringIO1 = BytesIO(img.read())
             
-            res = c.post('/collection/rooms/1/add-plant', data={'name': 'Sansevieria Fernwood', 'plant_type': 28, 'light_source': 1}, follow_redirects=True)
+            res = c.post('/collection/rooms/1/add-plant', content_type='multipart/form-data', data={'name': 'Sansevieria Fernwood', 'water_date': '', 'image': (imgStringIO1, 'rdt.png'), 'plant_type': 28, 'light_source': 1}, follow_redirects=True)
 
             plants = Plant.query.filter_by(room_id=1).all()
 
@@ -126,7 +129,7 @@ class TestScheduleViews(TestCase):
 
         #new plant that is not ready to water.
         plant1 = Plant(id=1, name='Hoya', user_id=10, type_id=37, room_id=1, light_id=1)
-        ws1 = WaterSchedule(id=1, water_date=datetime(2021, 5, 1), next_water_date=datetime(2021, 5, 1) + timedelta(days=7), water_interval=7, plant_id=1)
+        ws1 = WaterSchedule(id=1, water_date=datetime(2021, 5, 1), next_water_date=datetime(2021, 5, 1) + timedelta(days=80), water_interval=7, plant_id=1)
 
         #new plant that is ready to water.
         plant2 = Plant(id=2, name='Calathea', user_id=10, type_id=17, room_id=1, light_id=1)
@@ -262,7 +265,7 @@ class TestScheduleViews(TestCase):
 
             self.assertEqual(res.status_code, 200)
             self.assertIn('Edit Water Schedule For Hoya', str(res.data))
-            self.assertIn('You can use this form to toggle the water schedule to manual or off manual mode, or simply change the number of days until the next water date.', str(res.data))
+            self.assertIn('You can use this form to toggle the water schedule between manual mode or algorithm mode.', str(res.data))
             self.assertIn('Manual mode enabled?', str(res.data))
 
     def test_edit_water_schedule(self):

@@ -11,11 +11,7 @@
 <div class="row">
   <div class="col-sm-6">
     <div class="card h-100">
-      {% if '/static/img/' not in plant.image %}
-      <img src="{{ url_for('download_file', filename=plant.image) }}" class="card-img-top mx-auto" alt="{{ plant.name }}" style="width: 16rem;">
-      {% else %}
       <img src="{{ plant.image }}" class="card-img-top" alt="{{ plant.name }}">
-      {% endif %}
       <div class="card-body">
         <a href="{{ url_for('edit_plant', plant_id=plant.id)}}" class="btn btn-warning m-2">Edit {{ plant.name }}</a>
         <button class="btn btn-danger m-2" type="button" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete Plant</button>
