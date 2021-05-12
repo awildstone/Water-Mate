@@ -7,7 +7,7 @@
 <h1>Dashboard</h1>
 
 {% if collections %}
-<p>Welcome to the dashboard, {{ user.name }}. View, or edit your collection(s).</p>
+<p>Welcome to the dashboard, {{ user.name }}. <a href="{{ url_for('show_collections')}}">View, or edit your collection(s).</a></p>
 <p><a href="{{ url_for('add_collection') }}" class="btn btn-success">Add Collection</a></p>
 
   {% for collection in collections %}

@@ -16,11 +16,7 @@
 {% for plant in plants %}
   <div class="col" data-col-id="{{ plant.id }}">
     <div class="card h-100" id="{{ plant.id }}" style="width: 14rem;">
-      {% if '/static/img/' not in plant.image %}
-        <img src="{{ url_for('download_file', filename=plant.image) }}" class="card-img-top" alt="{{ plant.name }}">
-      {% else %}
-        <img src="{{ plant.image }}" class="card-img-top" alt="{{ plant.name }}">
-      {% endif %}
+      <img src="{{ plant.image }}" class="card-img-top" alt="{{ plant.name }}">
       <div class="card-body">
         <h3 class="card-title"><a href="{{ url_for('view_plant', plant_id=plant.id)}}">{{ plant.name }}</a></h3>
         <div class="card-text"><a class="btn btn-primary m-2 notes_btn">Add Notes</a><form method="POST" class="notes_form" style="display: none;">

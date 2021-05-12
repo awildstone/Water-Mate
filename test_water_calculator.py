@@ -1,6 +1,6 @@
 """Test Class for Water Calculator."""
 
-# FLASK_ENV=production python -m unittest test_water_calculator.py
+# FLASK_ENV=production python3 -m unittest test_water_calculator.py
 
 from unittest import TestCase
 from solar_calculator import SolarCalculator
@@ -67,8 +67,8 @@ class TestWaterCalculator(TestCase):
             type='East'
         )
 
-        wc1 = WaterCalculator(user=user, plant_type=plant_type1, water_schedule=schedule1, light_type=light_type1)
-        wc2 = WaterCalculator(user=user, plant_type=plant_type2, water_schedule=schedule2, light_type=light_type2)
+        wc1 = WaterCalculator(user=user, plant_type=plant_type1, water_schedule=schedule1, light_type=light_type1.type)
+        wc2 = WaterCalculator(user=user, plant_type=plant_type2, water_schedule=schedule2, light_type=light_type2.type)
 
         self.wc1 = wc1
         self.wc2 = wc2

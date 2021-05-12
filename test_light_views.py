@@ -1,16 +1,15 @@
 """Test Light Source Views."""
 
-# FLASK_ENV=production python -m unittest test_light_views.py
+# FLASK_ENV=production python3 -m unittest test_light_views.py
 
 import os
-import shutil
 from unittest import TestCase
-from models import db, connect_db, User, Collection, Room, LightSource, Plant
+from models import *
 
 #set DB environment to test DB
 os.environ['DATABASE_URL'] = 'postgresql:///water_mate_test'
 
-from app import app, CURRENT_USER_KEY, UPLOAD_FOLDER
+from app import *
 
 #disable WTForms CSRF validation
 app.config['WTF_CSRF_ENABLED'] = False
@@ -23,24 +22,26 @@ class TestLightSourceViews(TestCase):
 
         self.client = app.test_client()
 
-        #delete user's uploads folder & files
-        if os.path.isdir(f'{UPLOAD_FOLDER}/{10}'):
-            shutil.rmtree(f'{UPLOAD_FOLDER}/{10}')
-
-        if os.path.isdir(f'{UPLOAD_FOLDER}/{12}'):
-            shutil.rmtree(f'{UPLOAD_FOLDER}/{12}')
+        db.session.rollback()
+        db.session.remove()
 
         #delete any old data from the tables
+        db.session.query(WaterHistory).delete()
+        db.session.commit()
+
+        db.session.query(WaterSchedule).delete()
+        db.session.commit()
+
         db.session.query(Plant).delete()
+        db.session.commit()
+
+        db.session.query(Collection).delete()
         db.session.commit()
 
         db.session.query(LightSource).delete()
         db.session.commit()
 
         db.session.query(Room).delete()
-        db.session.commit()
-
-        db.session.query(Collection).delete()
         db.session.commit()
 
         db.session.query(User).delete()
@@ -56,8 +57,7 @@ class TestLightSourceViews(TestCase):
             password='meowmeow')
 
         self.user1.id = 10
-        if not os.path.isdir(f'{UPLOAD_FOLDER}/{self.user1.id}'):
-            os.makedirs(f'{UPLOAD_FOLDER}/{self.user1.id}')
+        db.session.commit()
 
         self.user2 = User.signup(
             name='Kittenz Meow',
@@ -68,9 +68,6 @@ class TestLightSourceViews(TestCase):
             password='meowmeow')
 
         self.user2.id = 12
-        if not os.path.isdir(f'{UPLOAD_FOLDER}/{self.user2.id}'):
-            os.makedirs(f'{UPLOAD_FOLDER}/{self.user2.id}')
-
         db.session.commit()
 
         #set up test collections
@@ -146,7 +143,7 @@ class TestLightSourceViews(TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertIn('Cactus', str(res.data))
         self.assertIn('Southwest Light', str(res.data))
-        self.assertIn('Delete Southwest Light', str(res.data))
+        self.assertIn('Delete Southwest', str(res.data))
 
     def test_delete_light(self):
         """Delete a light source by id."""

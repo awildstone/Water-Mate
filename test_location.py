@@ -1,10 +1,10 @@
 """Location Tests"""
 
-#FLASK_ENV=production python -m unittest test_location.py
+#FLASK_ENV=production python3 -m unittest test_location.py
 
 from unittest import TestCase
 import requests, json
-from keys import MAPQUEST_KEY
+from dotenv import load_dotenv
 from location import UserLocation
 
 class TestUserLocation(TestCase):

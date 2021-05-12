@@ -1,18 +1,18 @@
 """Test Plant Views."""
 
-# FLASK_ENV=production python -m unittest test_plant_views.py
+# FLASK_ENV=production python3 -m unittest test_plant_views.py
 
 import os
-import shutil
+from io import BytesIO
 # from csv import DictReader
 from unittest import TestCase
-from models import db, connect_db, User, Collection, Room, LightSource, Plant, WaterSchedule #,LightType, PlantType
+from models import *
 from datetime import datetime, timedelta
 
 #set DB environment to test DB
 os.environ['DATABASE_URL'] = 'postgresql:///water_mate_test'
 
-from app import app, CURRENT_USER_KEY, UPLOAD_FOLDER
+from app import *
 
 #disable WTForms CSRF validation
 app.config['WTF_CSRF_ENABLED'] = False
@@ -20,58 +20,31 @@ app.config['WTF_CSRF_ENABLED'] = False
 class TestPlantViews(TestCase):
     """A class to test plant views and functionality in the app."""
 
-    # def seed_database(self):
-    #     """Seed a database with the LightType and PlantType tables and data."""
-
-    #     #add light types
-    #     artificial = LightType(type='Artificial')
-    #     north = LightType(type='North')
-    #     east = LightType(type='East')
-    #     south = LightType(type='South')
-    #     west = LightType(type='West')
-    #     northeast = LightType(type='Northeast')
-    #     northwest = LightType(type='Northwest')
-    #     southeast = LightType(type='Southeast')
-    #     southwest = LightType(type='Southwest')
-
-    #     db.session.add_all([artificial, north, east, south, west, northeast, northwest, southeast, southwest])
-    #     db.session.commit()
-
-    #     with open('generator/plant_types.csv') as plant_types:
-    #         db.session.bulk_insert_mappings(PlantType, DictReader(plant_types))
-
-    #     db.session.commit()
-
     def setUp(self):
         """Setup DB rows and clear any old data."""
 
         self.client = app.test_client()
 
-        # db.drop_all()
-        # db.create_all()
-        # self.seed_database()
-
-        #delete user's uploads folder & files
-        if os.path.isdir(f'{UPLOAD_FOLDER}/{10}'):
-            shutil.rmtree(f'{UPLOAD_FOLDER}/{10}')
-
-        if os.path.isdir(f'{UPLOAD_FOLDER}/{12}'):
-            shutil.rmtree(f'{UPLOAD_FOLDER}/{12}')
+        db.session.rollback()
+        db.session.remove()
 
         #delete any old data from the tables
+        db.session.query(WaterHistory).delete()
+        db.session.commit()
+
         db.session.query(WaterSchedule).delete()
         db.session.commit()
 
         db.session.query(Plant).delete()
         db.session.commit()
 
+        db.session.query(Collection).delete()
+        db.session.commit()
+
         db.session.query(LightSource).delete()
         db.session.commit()
 
         db.session.query(Room).delete()
-        db.session.commit()
-
-        db.session.query(Collection).delete()
         db.session.commit()
 
         db.session.query(User).delete()
@@ -87,8 +60,7 @@ class TestPlantViews(TestCase):
             password='meowmeow')
 
         self.user1.id = 10
-        if not os.path.isdir(f'{UPLOAD_FOLDER}/{self.user1.id}'):
-            os.makedirs(f'{UPLOAD_FOLDER}/{self.user1.id}')
+        db.session.commit()
 
         self.user2 = User.signup(
             name='Kittenz Meow',
@@ -99,9 +71,6 @@ class TestPlantViews(TestCase):
             password='meowmeow')
 
         self.user2.id = 12
-        if not os.path.isdir(f'{UPLOAD_FOLDER}/{self.user2.id}'):
-            os.makedirs(f'{UPLOAD_FOLDER}/{self.user2.id}')
-
         db.session.commit()
 
         #set up test collections
@@ -134,9 +103,16 @@ class TestPlantViews(TestCase):
     
     def tearDown(self):
         """Rollback any sessions."""
-
         db.session.rollback()
         db.session.remove()
+
+        #delete the s3 folders that were created for test_add_plant and test_edit_plant
+        s3 = boto3.resource('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'), aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
+        bucket = s3.Bucket(BUCKET_NAME)
+        for key in bucket.objects.filter(Prefix=f'uploads/user/{10}/'):
+            key.delete()
+        for key in bucket.objects.filter(Prefix=f'uploads/user/{12}/'):
+            key.delete()
 
     def test_view_plant_details(self):
         """View a plant's details by plant ID."""
@@ -171,7 +147,7 @@ class TestPlantViews(TestCase):
 
             self.assertEqual(res.status_code, 200)
             self.assertIn('Add a new Plant', str(res.data))
-            self.assertIn('Please use the form below to add a new plant to your Bedroom (room).', str(res.data))
+            self.assertIn('Please use the form below to add a new plant to your Bedroom.', str(res.data))
             self.assertIn('Plant Name', str(res.data))
             self.assertIn('Plant Image (Optional)', str(res.data))
             self.assertIn('Plant Type', str(res.data))
@@ -187,8 +163,11 @@ class TestPlantViews(TestCase):
         with self.client as c:
             with c.session_transaction() as session:
                 session[CURRENT_USER_KEY] = self.user2.id
-            
-            res = c.post('/collection/rooms/2/add-plant', data={'name': 'Sansevieria Fernwood', 'plant_type': 28, 'light_source': 2}, follow_redirects=True)
+            with open('/Users/aimeewildstone/Desktop/rdt.png', 'rb') as img:
+                imgStringIO1 = BytesIO(img.read())
+
+            #this test will create folders in the s3 bucket /uploads/user/12/rdt.png
+            res = c.post('/collection/rooms/2/add-plant', content_type='multipart/form-data', data={'name': 'Sansevieria Fernwood', 'water_date': '', 'image': (imgStringIO1, 'rdt.png'), 'plant_type': 28, 'light_source': 2}, follow_redirects=True)
 
             plants = Plant.query.filter_by(room_id=2).all()
 
@@ -221,8 +200,11 @@ class TestPlantViews(TestCase):
         with self.client as c:
             with c.session_transaction() as session:
                 session[CURRENT_USER_KEY] = self.user1.id
+            with open('/Users/aimeewildstone/Desktop/rdt.png', 'rb') as img:
+                imgStringIO1 = BytesIO(img.read())
             
-            res = c.post('/collection/room/plant/1/edit', data={'name': 'Hoya Publicayx', 'plant_type': 37, 'light_source': 1}, follow_redirects=True)
+            #this test will create folders in the s3 bucket /uploads/user/10/rdt.png
+            res = c.post('/collection/room/plant/1/edit', data={'name': 'Hoya Publicayx', 'water_date': '2021-5-1', 'image': (imgStringIO1, 'rdt.png'), 'plant_type': 37, 'light_source': 1}, follow_redirects=True)
 
             self.assertEqual(res.status_code, 200)
             self.assertIn('Hoya Publicayx', str(res.data))
@@ -242,10 +224,3 @@ class TestPlantViews(TestCase):
             self.assertEqual(res.status_code, 200)
             self.assertEqual(len(plants), 0)
             self.assertIn('Plant Deleted.', str(res.data))
-
-
-
-
-
-
-
