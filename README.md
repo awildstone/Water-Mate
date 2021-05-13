@@ -11,7 +11,7 @@ The app is styled using the Bootstrap frontend framework, Jinja HTML templates, 
 * Solar Data  is generated using the [Sunset and Sunrise times API.](https://sunrise-sunset.org/api)
 * Database schema: [https://app.quickdatabasediagrams.com/#/d/mxfbkG](https://app.quickdatabasediagrams.com/#/d/mxfbkG) 
 
-###How to setup the local enviroment to contribute
+### How to setup the local enviroment to contribute
 If you are interested in contributing you can create a pull request then you will need the following in your environment:
 
 1. Python 3.9.2 - create a venv and pip3 install requirements.txt
@@ -26,7 +26,7 @@ If you are interested in contributing you can create a pull request then you wil
 
 Water Mate helps houseplant lovers organize their houseplants into Collections with Rooms, Lightsources, and Plants and reminds the user when it’s time to water their plant. Any person around the world who loves houseplants and can identify the type of plant they own can use this app.
 
-#####Signup & Configuration
+##### Signup & Configuration
 A user can sign up in one step and begin using the app right away:
 
 * The user's geolocation is generated on signup, then the user is directed to the Getting Started page to learn how to use the app. The Getting Started page includes how to get started using the app, and tips for success. Users will be able to access all of this info on an "Get Started" tab at any time if they need to reference.
@@ -38,7 +38,7 @@ A user can sign up in one step and begin using the app right away:
 
 Once the configuration is complete, the user can visit the Dashboard to manage their Collection(s) or visit the Water Manager to care for their plants.
 
-#####User Features
+##### User Features
 * Users can add, edit, or delete Collections, Rooms, and Plants as needed to keep their collection details current. Users cannot delete Collections or Rooms that have plants in them and will recieve a warning if attempting to do so (because they need to delete or move the plant first). Users can create and manage multiple Collections.
 * Rooms help organize a plant collection and describe the location of the plant. Rooms will have lightsources such as North, South, East, or West facing windows or artificial lightsources. Lightsources in rooms can be added, edited, or deleted.
 * Each plant will have a name, photo, plant type, lightsource, collection location, room location, water schedule details, and water history. The User will provide a plant name and optional photo and the user will select a type and lightsource from available dropdown. All of the plant's details can be viewed or managed from the plant detail view page.
@@ -51,17 +51,17 @@ Once the configuration is complete, the user can visit the Dashboard to manage t
 * Users can update their profile details, update their password, and even update their geolocation if needed.
 * Users can delete their account and all data (including uploads) if they choose to no longer use the app.
 
-#####Water Algorithm
+##### Water Algorithm
 When a user signs up for an account, the user's geolocation (latitude and longitude) is captured and used by the Water Mate watering algorithm to calculate a watering schedule unique to each plant. The water algorithm is composed of a location, plant type data, light type data, a solar calculator, and a water calculator. The algorithm will start working for a plant as soon as it is added to the app.
 
-#####Solar Calculator
+##### Solar Calculator
 The Solar Calculator uses a solar data API, a user's geolocation data, and a plant water interval (the number of days between watering) to calculate a solar forcast. 
 
 * The solar forcast contains the maximum amount of daily light a plant recieves with consideration of the plant's light source type and location on earth. 
 * For example, in the northern hemisphere, south-facing windows receive the most light exposure while north-facing windows receive the least. East-facing windows receive morning exposure from sunrise to solar noon, and western windows receive afternoon exposure from solar noon to sunset. There is less daily sunlight in winter vs. more daily light summer seasons due to the angle of the sun in the user's location. 
 * These considerations are taken into account when calculating the maximum amount of light a plant recieves each day during the water interval period.
 
-#####Water Calculator
+##### Water Calculator
 The Water Calculator calculates a water interval for a single plant and determines the plant's next water date.
 
 * The Water Calculator uses data about the plant's base care requirements, and the solar forcast's daily maximum light potential for each day in the days between watering the plant (the water interval). 
@@ -71,14 +71,14 @@ The Water Calculator calculates a water interval for a single plant and determin
 * The result of the (average light) - (base light requirements) is compared to a threshold that calculates how much of an adjustment to make to the water interval. When the differences are smaller minor adjustments are made, and larger differences will make larger adjustments in an attempt to correct/compensate. 
 * The reason for this is because plants using natural light will experience changes depending on the season, therefore minor adjustments need to be made throughout the year to account for the changes in light. Plants living in poor conditions (not enough light, or too much) need corrections made to the care routine immediately as the initial base care requirements for the plant type assumes the plant lives in optimal conditions when it is first added to the app.
 
-#####Other considerations in this algorithm:
+##### Other considerations in this algorithm:
 1. Sometimes a home cannot provide ideal light conditions for the plant's type no matter what and the watering algorithm could continue to adjust the schedule due to poor conditions. Therefore, a max-days-without-water threshold is set by the algorithm with the max-days-without-water coming from the plant type base care data.
 
 2. Sometimes the algorithm may attempt to make a correction or extreme correction that may set the water interval to a negative number. In this case the algorithm will "reset" the water interval to 3 days and then the user can check the plant's condition and Water or Snooze accordingly in 3 days.
 
 3. No matter what, the water interval will never exceed the plant type max-days-without-water so plants in less than optimal conditions will recieve enough water to stay alive and plants in extreme conditions will not recieve too much water so as to cause root rot.
 
-###Improvements
+### Improvements
 
 Water Mate does not yet account for important enviromental factors that will affect how often to water a plant such as trees or structures blocking a lightsource, cloud cover, local temperature, or local humidity. I have a few ideas on how to compensate for these factors to improve the water algorithm:
 
@@ -98,6 +98,6 @@ Water Mate does not yet account for important enviromental factors that will aff
 
 8. [I have a doc of feature improvements that I will update as more ideas come to me and others deployed.](https://docs.google.com/document/d/12R3ovz82NcN3S5h0J6SjgOv-kATnyncojOORNjq90GU/edit?usp=sharing)
 
-###Questions/Feedback?
+### Questions/Feedback?
 
 I would love questions, or feedback on how I can improve. This app is far from perfect and I want to learn how I can make it better. Please contact me awildstone@gmail.com
