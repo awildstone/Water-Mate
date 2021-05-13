@@ -10,7 +10,7 @@
 <p>Click Water to mark your plant watered, or Snooze to snooze your plant's water schedule for 3 days. Click "Add Notes" to add notes if applicable.</p>
 {% else %}
 <p>There are no plants to water today, take a break! <i class="fab fa-pagelines"></i></p>
-<p><img src="/static/img/succulent_terrariums.png" width="60%"></p>
+<p><img class="m-2" src="/static/img/succulent_terrariums.png" width="60%"></p>
 {% endif %}
 
 <div class="row row-cols-1 row-cols-md-3 g-4" id="plants_container">
@@ -28,7 +28,6 @@
             {{ error }}
             </small>
             {% endfor %}
-            <!-- <button type="button" name="water_button" data-plant-id="{{ plant.id }}" class="btn btn-success m-2">Water</button><button type="button" name="snooze_button" data-plant-id="{{ plant.id }}" class="btn btn-warning m-2">Snooze</button> -->
             </div>
           </form>
           <button type="button" name="water_button" data-plant-id="{{ plant.id }}" class="btn btn-success m-2">Water</button><button type="button" name="snooze_button" data-plant-id="{{ plant.id }}" class="btn btn-warning m-2">Snooze</button>
