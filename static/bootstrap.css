@@ -103,7 +103,7 @@ h6 {
 }
 
 #header {
-	background-color: #2c3e4f;
+	background-color: #ffffff;
 }
 
 #header::before {
@@ -117,6 +117,25 @@ h6 {
 	bottom: 0px;
 	left: 0px;
 	opacity: 0.3;
+	border-radius: 5px;
+}
+
+#room {
+	background-color: #ffffff;
+}
+
+#room::before {
+	content: "";
+	background-image: url('/static/img/leaves.png');
+	background-size: 800px;
+	background-repeat: repeat-y;
+	position: absolute;
+	top: 0px;
+	right: 0px;
+	bottom: 0px;
+	left: 0px;
+	opacity: 0.2;
+	border-radius: 5px;
 }
 
 p {

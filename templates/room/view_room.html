@@ -4,33 +4,36 @@
 
 {% block content %}
 
-<div class="col-8 mx-auto">
-  <h1>{{ room.name }}</h1>
+<div class="col-8 mx-auto border border-secondary rounded" id="room">
+  <div class="col mt-2">
+  <h2 class="mt-1">{{ room.name }}</h2>
   {% if lightsources %}
   <h4>Your {{ room.name }} has the following light sources:</h4>
+  </div>
 
   <ul class="list-group m-3">
     {% for light in lightsources %}
-    <li class="list-group-item list-group-item-secondary"><a href="{{ url_for('view_lightsource_plants', lightsource_id=light.id) }}">{{ light.type }}</a></li>
+    <li class="list-group-item list-group-item-white"><a href="{{ url_for('view_lightsource_plants', lightsource_id=light.id) }}">{{ light.type }}</a></li>
     {% endfor %}
   </ul>
-
+  <div class="col">
   <p><a href="{{ url_for('add_lightsource', room_id=room.id) }}" class="btn btn-success">Add Lighsource</a></p>
 
   {% if plants %}
   <h4>Your {{ room.name }} has the following plants:</h4>
-
+  </div>
   <ul class="list-group m-3">
     {% for plant in plants %}
-    <li class="list-group-item list-group-item-secondary"><a href="{{ url_for('view_plant', plant_id=plant.id) }}">{{ plant.name }}</a></li>
+    <li class="list-group-item list-group-item-white"><a href="{{ url_for('view_plant', plant_id=plant.id) }}">{{ plant.name }}</a></li>
     {% endfor %}
   </ul>
-
+  <div class="col">
   <p><a href="{{ url_for('add_plant', room_id=room.id) }}" class="btn btn-success">Add Plant</a></p>
   {% else %}
   <h4>Add plants to this room:</h4>
   <p><a href="{{ url_for('add_plant', room_id=room.id) }}" class="btn btn-success">Add Plant</a></p>
   {% endif %}
+  </div>
 
   <div class="row m-4">
     <div class="col">
