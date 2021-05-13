@@ -18,9 +18,11 @@
   </ul>
 
   <p><a href="{{ url_for('add_room', collection_id=collection.id) }}" class="btn btn-success btn-lg">Add a Room</a></p>
+  <p><img src="/static/img/houseplant_lineup.png" width="100%"></p>
   {% else %}
   <h4>You don't have any rooms in your collection yet! Add your first room.</h4>
   <p><a href="{{ url_for('add_room', collection_id=collection.id) }}" class="btn btn-success btn-lg">Add a Room</a></p>
+  <p><img src="/static/img/houseplant_lineup.png" width="100%"></p>
   {% endif %}
 </div>
 

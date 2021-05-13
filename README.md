@@ -1,107 +1,103 @@
-# Water-Mate
-Water Mate helps you organize your collection of houseplants and manage their watering schedule.
-
-### Capstone 1 Proposal  - Water Mate
-
-### 1. What goal will your website be designed to achieve? 
-
-Water Mate will manage the watering schedule for houseplant lovers by organizing their collection of houseplants by location and remind the user when it’s time to water their plant in a daily digest.
-
-### 2. What kind of users will visit your site? In other words, what is the demographic of your users?
-
-Any person around the world who enjoys caring for houseplants can use this app. Any person who can identify the type of plant they have and can enter the details about the plant location and light source in their home can use this app.
-
-### 3. What data do you plan on using? You may have not picked your actual API yet, which is fine, just outline what kind of data you would like it to contain.
-
-The app will use the user’s geolocation to collect data about the amount of daily sunlight in the user’s geolocation. This data is used to formulate a recommended watering schedule for a plant, based on the plant’s type, location near a light source, amount of light, and the type of light source.
-
-The location of the user determines the daily potential of sunlight a plant can receive and the type of light source in that user’s location determines the quantity of light a plant receives.
-
-For example, in the northern hemisphere, south-facing windows receive the most light exposure while north-facing windows receive the least. East-facing windows receive cooler morning exposure and western windows receive hotter afternoon exposure. There is less potential sunlight in winter vs summer months due to the angle of the sun rise/set.
-
-This app will not include the calculation of the sun’s angle in the first iteration but will likely include this in a later release to improve the watering algorithm. Future releases can also include other important local environmental factors such as cloud cover and temperature.
-
-The database will contain a list of general plant categories along with help for the user to choose a category for their plant. The category will contain the base watering recommendation that will be altered using data on the amount and quality of light the plant receives. I will likely scrape this data from a few websites.
-
-Potential Websites for scraping general data for a base watering schedule:
-* [https://www.ourhouseplants.com/sitemap#plants](https://www.ourhouseplants.com/sitemap#plants)
-* [https://osera.org/](https://osera.org/)
-
-I will be using mapquest to generate a user's lat/long location coordinates based off of the user's city/state/zip that they enter:
-* https://developer.mapquest.com/
-
-I will use this free API to get the daily amount of sunlight in a user's location for a given day (I could potenitally use other data from this API in the future):
-* [https://sunrise-sunset.org/api](https://sunrise-sunset.org/api)
-
-In future iterations I can potentially use a service like Sun-Calc to get the angle of the sun for a given time of year:
-* [https://www.suncalc.org/](https://www.suncalc.org/)
-
-I have also considered future iterations could get lat/long data from the user's ip address, or allow the user to manually enter their city/state/zip for better accuracy:
-* [https://ip-api.com/](https://ip-api.com/)
-
-### 4. In brief, outline your approach to creating your project (knowing that you may not know everything in advance and that these details might change later). Answer questions like the ones below, but feel free to add more information:
- 
-#### a. What does your database schema look like? 
-
-Starting schema mockup here:
-[https://app.quickdatabasediagrams.com/#/d/mxfbkG](https://app.quickdatabasediagrams.com/#/d/mxfbkG) 
+# [Water Mate](https://water-mate.herokuapp.com/)
 
 
-#### b. What kinds of issues might you run into with your API?
+### Technologies used
+Water Mate is a full stack Python application built on the Flask serverside framework and uses Flask-SQLAlchemy, Flask-WTForm, Postgres database, and [S3 (Boto3)](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html) for persisting user uploads and data. 
 
-I could run into issues if the API I used to get sun calculations goes down or in the future local weather/temps. This could affect the recommended watering algorithm calculations if I am not storing this data.
+The app is styled using the Bootstrap frontend framework, Jinja HTML templates, and JavaScript (Axios) for client AJAX requests.
 
-I will need to make a decision on how often to update environmental variables in the future, but for now, I can simply gather the sunlight data for a user’s location each time a plant's watering schedule is updated, or if a user updates their location.
+* The app is hosted on Heroku. You can visit and try out the live production app: [https://water-mate.herokuapp.com/](https://water-mate.herokuapp.com/)
+* Geolocation data is gathered using [Mapquest Geocoding API](https://developer.mapquest.com/documentation/geocoding-api/).
+* Solar Data  is generated using the [Sunset and Sunrise times API.](https://sunrise-sunset.org/api)
+* Database schema: [https://app.quickdatabasediagrams.com/#/d/mxfbkG](https://app.quickdatabasediagrams.com/#/d/mxfbkG) 
+
+###How to setup the local enviroment to contribute
+If you are interested in contributing you can create a pull request then you will need the following in your environment:
+
+1. Python 3.9.2 - create a venv and pip3 install requirements.txt
+2. Create a .env file to manage environment variables.
+3. You will need to sign up for a [Mapquest API key](https://developer.mapquest.com/plan_purchase/steps/business_edition/business_edition_free/register) and add MAPQUEST_KEY=your-key to the .env file
+4. The S3 user uploads feature cannot work without a configured S3 bucket. You will need to set up your own free S3 account and [configure the bucket to public](https://aws.amazon.com/premiumsupport/knowledge-center/read-access-objects-s3-bucket/). You will need to add variables to .env for AWS\_ACCESS\_KEY\_ID, AWS\_SECRET\_ACCESS\_KEY, S3\_BUCKET (your bucket name), and S3\_LOCATION (the direct URL to your objects ending with /uploads/user/ to match the path on the app).
+5. Set up a Postres database called **water_mate**, then run Seed.py to setup the DB tables and seed with the required LightType and PlantType data.
+6. /static/app.js contains urls for making AJAX calls to the server. Make sure the BASE\_URL is set to your local server.
 
 
-#### c. Is there any sensitive information you need to secure?
+### How this app works
 
-Yes - user’s name, email, password, and the user’s lat and long geolocation variables. To protect users my app will only ask for the user’s City, State, Zipcode to calculate these variables and store them. I will be cryptographically hashing and salting the passwords.
+Water Mate helps houseplant lovers organize their houseplants into Collections with Rooms, Lightsources, and Plants and reminds the user when it’s time to water their plant. Any person around the world who loves houseplants and can identify the type of plant they own can use this app.
+
+#####Signup & Configuration
+A user can sign up in one step and begin using the app right away:
+
+* The user's geolocation is generated on signup, then the user is directed to the Getting Started page to learn how to use the app. The Getting Started page includes how to get started using the app, and tips for success. Users will be able to access all of this info on an "Get Started" tab at any time if they need to reference.
+* All controlls are hidden until a user adds their first Collection by name.
+* Users will be instructed to create the rooms, then add room lightsources, then add plants. Controls are made visible in order to control the users flow through the setup.
+* From a Room view, users can modify or delete light sources and view a list of all of the plants in a room. Users will receive an error if they try to delete a room or lightsource that has plants.
+* From the plant view, users can modify the plant name, photo, location, light source, type, or delete the plant if it died. The user also will have controls to update the water schedule or view the plant's water history.
 
 
-#### d. What functionality will your app include?
+Once the configuration is complete, the user can visit the Dashboard to manage their Collection(s) or visit the Water Manager to care for their plants.
 
-Users can update their user profile information such as name, email, password, or update/reset their geolocation using their country/city. Users will not be able to update their username. For now, all user's will have Owner (Admin) user permissions over their account. 
-(Future iterations will give Owners the ability to add a Caregiver (User) role access to their account if they need someone else to manage the watering schedule on their behalf. The Admin user can add or remove this user's access in their account at any time and the Caregiver role will only have ability to view collection or add notes, mark a plant watered, or snooze the plant water schedule.)
+#####User Features
+* Users can add, edit, or delete Collections, Rooms, and Plants as needed to keep their collection details current. Users cannot delete Collections or Rooms that have plants in them and will recieve a warning if attempting to do so (because they need to delete or move the plant first). Users can create and manage multiple Collections.
+* Rooms help organize a plant collection and describe the location of the plant. Rooms will have lightsources such as North, South, East, or West facing windows or artificial lightsources. Lightsources in rooms can be added, edited, or deleted.
+* Each plant will have a name, photo, plant type, lightsource, collection location, room location, water schedule details, and water history. The User will provide a plant name and optional photo and the user will select a type and lightsource from available dropdown. All of the plant's details can be viewed or managed from the plant detail view page.
+* Users can water a plant or snooze a plant's watering schedule in the Water Manager.
+* Watering a plant will trigger the water algorithm to generate a new water date for the plant. If the water schedule is set to manual mode or the plant's lightsource is artificial the water algorithm will not be used and the next water date is updated using the water interval.
+* Snoozing a plant adjusts the plant's water schedule for three days but does not updte the last water date. This feature is helpful if a plan't soil is too moist and not ready to water yet.
+* Users can add notes to water events (Water or Snooze) to indicate care details about the plant (soil too dry or wet, pest prevention, fertilized, ect.).
+* Users can modify the water interval for a plant, or set a plant's water schedule to a manual water interval (for cases where the environment is controlled with artificial light and seasonal adjustments are not needed).
+* Users can view a plant's history seeing all of the past care events (Water or Snooze) and notes (if any). Helpful for determining if a water schedule needs correction or trying to understand why a plant may have died.
+* Users can update their profile details, update their password, and even update their geolocation if needed.
+* Users can delete their account and all data (including uploads) if they choose to no longer use the app.
 
-Users will have a “collection” where they can view, add, edit, or delete rooms. Users can have multiple collections (such as Home and Office).
+#####Water Algorithm
+When a user signs up for an account, the user's geolocation (latitude and longitude) is captured and used by the Water Mate watering algorithm to calculate a watering schedule unique to each plant. The water algorithm is composed of a location, plant type data, light type data, a solar calculator, and a water calculator. The algorithm will start working for a plant as soon as it is added to the app.
 
-Rooms help organize a plant collection and describe the location of the plant. Rooms will have light sources such as North, South, East, or West facing windows or artificial light sources. Light sources in rooms can be added, edited, or deleted.
+#####Solar Calculator
+The Solar Calculator uses a solar data API, a user's geolocation data, and a plant water interval (the number of days between watering) to calculate a solar forcast. 
 
-Users will add plants to their collection. Each plant will have a name, photo, plant type, room location, light source, and a watering schedule. The User will provide a plant name and optional photo and the user will select a type from a table, the room from a dropdown, lightsource from dropdown. The app will create and calculate the plant's water schedule using this data.
+* The solar forcast contains the maximum amount of daily light a plant recieves with consideration of the plant's light source type and location on earth. 
+* For example, in the northern hemisphere, south-facing windows receive the most light exposure while north-facing windows receive the least. East-facing windows receive morning exposure from sunrise to solar noon, and western windows receive afternoon exposure from solar noon to sunset. There is less daily sunlight in winter vs. more daily light summer seasons due to the angle of the sun in the user's location. 
+* These considerations are taken into account when calculating the maximum amount of light a plant recieves each day during the water interval period.
 
-The watering schedule can be modified for a specific plant. The watering schedule is calculated using the amount of daily light in the user’s geolocation, the location of the plant to a light source, and the type of plant.
+#####Water Calculator
+The Water Calculator calculates a water interval for a single plant and determines the plant's next water date.
 
-#### e. What will the user flow look like?
+* The Water Calculator uses data about the plant's base care requirements, and the solar forcast's daily maximum light potential for each day in the days between watering the plant (the water interval). 
+* The max daily light from the solar forcast is averaged over the total number of days in the water interval. The plant type base light requirements are subtracted from the average amount of light the plant recieves.
+* A negative result indicates that a plant is recieving (on average) less light than it needs to thrive, therefore the water interval should increase to avoid over-watering the plant.
+* A positive result indicates that the plant is recieving (on average) enough or more than enough light and the water interval should decrease for more frequent watering.
+* The result of the (average light) - (base light requirements) is compared to a threshold that calculates how much of an adjustment to make to the water interval. When the differences are smaller minor adjustments are made, and larger differences will make larger adjustments in an attempt to correct/compensate. 
+* The reason for this is because plants using natural light will experience changes depending on the season, therefore minor adjustments need to be made throughout the year to account for the changes in light. Plants living in poor conditions (not enough light, or too much) need corrections made to the care routine immediately as the initial base care requirements for the plant type assumes the plant lives in optimal conditions when it is first added to the app.
 
-A user will register their account information including name, email, username, password, and City/State/Zip. City/State/Zip will be used to calculate and store user’s geolocation.
+#####Other considerations in this algorithm:
+1. Sometimes a home cannot provide ideal light conditions for the plant's type no matter what and the watering algorithm could continue to adjust the schedule due to poor conditions. Therefore, a max-days-without-water threshold is set by the algorithm with the max-days-without-water coming from the plant type base care data.
 
-The user will be greeted with a landing page of instructions to get started. The instructions will include how to access the user controls in navigation and a brief intro of how the app works. Users will be able to access all of this info on an "About" tab at any time if they need to reference.
+2. Sometimes the algorithm may attempt to make a correction or extreme correction that may set the water interval to a negative number. In this case the algorithm will "reset" the water interval to 3 days and then the user can check the plant's condition and Water or Snooze accordingly in 3 days.
 
-Users will be instructed to create the rooms in their home first, then add room light sources, then add plants. Users cannot add a plant without being able to select a room and light source (from a dropdown generated by user data).
+3. No matter what, the water interval will never exceed the plant type max-days-without-water so plants in less than optimal conditions will recieve enough water to stay alive and plants in extreme conditions will not recieve too much water so as to cause root rot.
 
-Users can modify room names or delete rooms from the Collection view. Users cannot delete rooms that have plants and will be warned to update the plant location first.
+###Improvements
 
-From a Room view, users can modify or delete light sources and view a list of all of the plants in a room. Users will receive an error if they try to delete a light source that has plants (those plants need to be moved).
+Water Mate does not yet account for important enviromental factors that will affect how often to water a plant such as trees or structures blocking a lightsource, cloud cover, local temperature, or local humidity. I have a few ideas on how to compensate for these factors to improve the water algorithm:
 
-From the plant view, users can modify the plant name, photo, location, light source, type, or delete the plant if it died. The user also will have controls in the watering schedule table.
+1. Adding a modifier of some kind to light sources that users can add to indicate obstructions. The modifier can indicate some kind of severity where 1 is mildly obstructed and 5 is fully obstructed. These modifiers can be used in the Solar Calculator to modify the max-daily-light further.
 
-The watering schedule history table will show the date the plant was last marked watered by the user, snooze data (if any), any notes the user may have added, the current calculated water timeline (eg, every 7 days), and the upcoming watering date. The history table will be limited the 20 most recent events, after this, user's can request a history report to view past events. (Future iterations may include pagination of history table).
+2. In a similar fashion, the algorithm could improve to use a weather API to gather data on average temperature and cloudcover. Modifiers can be used for temperature (higher temps = more water, lower temps = less water) and cloudcover can modify the total amount of light a plant recieves.
 
-Notes are optional for a user to add - eg saw pests, needs fertilizer, the soil was still very moist or too dry, etc. 
+3. If there are APIs that offer data about local humidity using geolocation I would love to hear about it! This is a tough problem because people's homes vary greatly on how much humidity there is.
 
-Users can manually adjust the calculated water timeline if it is not meeting their needs increasing or decreasing the number of days between waterings. The app will respect manual overrides and ignore this row for algorithmic updates, and the watering table will somehow indicate to the user that it is set to manual mode. The user can also “reset” the watering timeline to the app’s algorithmic recommendations if they want to resume.
+4. I would like to also evevtually improve the accuracy of the Solar Calculator by including calculations of the sun's azimuth. Modifiers should be used to account for the azimuth in the user's locality as this will affect how much direct sunlight can reach a plant in winter vs. summer months. I found this API that would be extremely helpful if I can find a way to use the data: [https://www.suncalc.org/](https://www.suncalc.org/)
 
-A daily digest page will include all of the plants the user needs to water that day. The user will receive a reminder via email link that takes them directly to the daily digest view. When the user marks a plant watered in the daily digest table, this will update the watering table data in the plant view.
+5. I would like to implement a feature that emails the user a link to login when they have plants ready to water in their Water Manager view. When returning users log in they are automatically directed to the Water Manager view.
 
-Users can also “snooze” a plant on the watering schedule from the daily digest page for 1, 3, or 7 days. Snoozing effectively adjusts the “next watering date” without adjusting the plant’s current water timeline and a user can leave a note as to why the plant was snoozed. The user will be reminded again to water the plant after the snooze period has elapsed.
+6. I would like to grant Collection owners the ability to add Caretaker roles temporarily. The Collection owner could manage this user account by creating, updating permissions, or deleting the account. The Caretaker role could only have access to Water and Snooze plants in the Water Manager view (and add notes), or be granted ability to view the dashboard but not have any edit capabilities.
 
-Lastly, users can generate a report of plant care from the plant page that will include all water events and notes for a specific timeline (or all time). This report will be emailed to the user.
+7. I would like to build a feature that exports all data (in a CSV) about a plant or all plants in the collection.
 
-#### f. What features make your site more than CRUD? Do you have any stretch goals?
+8. [I have a doc of feature improvements that I will update as more ideas come to me and others deployed.](https://docs.google.com/document/d/12R3ovz82NcN3S5h0J6SjgOv-kATnyncojOORNjq90GU/edit?usp=sharing)
 
-This app will have a watering algorithm that calculates a watering schedule based on input from the user such as the location and type of plant, and external environmental factors such as the user’s location on earth and the time of year.
+###Questions/Feedback?
 
-This app will include a daily digest of plants to water that is interactive and adjustable for the user.
-
-This app will include custom reporting data available to the user, in cases where they want to evaluate the effectiveness of a watering timeline, track health issues, or learn why a plant may have died.
+I would love questions, or feedback on how I can improve. This app is far from perfect and I want to learn how I can make it better. Please contact me awildstone@gmail.com
