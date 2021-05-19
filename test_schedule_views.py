@@ -59,7 +59,7 @@ class TestScheduleViews(TestCase):
             username='peppercat',
             password='meowmeow')
 
-        self.user1.id = 10
+        self.user1.id = 1000
         db.session.commit()
 
         self.user2 = User.signup(
@@ -70,12 +70,12 @@ class TestScheduleViews(TestCase):
             username='kittenz',
             password='meowmeow')
 
-        self.user2.id = 12
+        self.user2.id = 1200
         db.session.commit()
 
         #set up test collections
-        collection1 = Collection(id=1, name='Home', user_id=10)
-        collection2 = Collection(id=2, name='My House', user_id=12)
+        collection1 = Collection(id=1, name='Home', user_id=1000)
+        collection2 = Collection(id=2, name='My House', user_id=1200)
         db.session.add_all([collection1, collection2])
         db.session.commit()
 
@@ -99,7 +99,7 @@ class TestScheduleViews(TestCase):
         #delete the s3 folders that were created for test_create_water_schedule
         s3 = boto3.resource('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'), aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
         bucket = s3.Bucket(BUCKET_NAME)
-        for key in bucket.objects.filter(Prefix=f'uploads/user/{10}/'):
+        for key in bucket.objects.filter(Prefix=f'uploads/user/{1000}/'):
             key.delete()
     
     def test_create_water_schedule(self):
@@ -128,11 +128,11 @@ class TestScheduleViews(TestCase):
         """Test that the Water Manager only shows plants that are ready to water today."""
 
         #new plant that is not ready to water.
-        plant1 = Plant(id=1, name='Hoya', user_id=10, type_id=37, room_id=1, light_id=1)
+        plant1 = Plant(id=1, name='Hoya', user_id=1000, type_id=37, room_id=1, light_id=1)
         ws1 = WaterSchedule(id=1, water_date=datetime(2021, 5, 1), next_water_date=datetime(2021, 5, 1) + timedelta(days=80), water_interval=7, plant_id=1)
 
         #new plant that is ready to water.
-        plant2 = Plant(id=2, name='Calathea', user_id=10, type_id=17, room_id=1, light_id=1)
+        plant2 = Plant(id=2, name='Calathea', user_id=1000, type_id=17, room_id=1, light_id=1)
         ws2 = WaterSchedule(id=2, water_date=datetime(2021, 5, 1), next_water_date=datetime(2021, 5, 5), water_interval=7, plant_id=2)
 
         db.session.add_all([plant1, plant2, ws1, ws2])
@@ -151,7 +151,7 @@ class TestScheduleViews(TestCase):
         """Test that a plant's water schedule is updated when a plant is watered."""
 
         #new plant that is ready to water.
-        plant2 = Plant(id=2, name='Calathea', user_id=10, type_id=17, room_id=1, light_id=1)
+        plant2 = Plant(id=2, name='Calathea', user_id=1000, type_id=17, room_id=1, light_id=1)
         ws2 = WaterSchedule(id=2, water_date=datetime(2021, 5, 1), next_water_date=datetime(2021, 5, 5), water_interval=7, plant_id=2)
 
         db.session.add_all([plant2, ws2])
@@ -177,7 +177,7 @@ class TestScheduleViews(TestCase):
         """Test that a Water History is created when a plant is watered."""
 
         #new plant that is ready to water.
-        plant2 = Plant(id=2, name='Calathea', user_id=10, type_id=17, room_id=1, light_id=1)
+        plant2 = Plant(id=2, name='Calathea', user_id=1000, type_id=17, room_id=1, light_id=1)
         ws2 = WaterSchedule(id=2, water_date=datetime(2021, 5, 1), next_water_date=datetime(2021, 5, 5), water_interval=7, plant_id=2)
 
         db.session.add_all([plant2, ws2])
@@ -201,7 +201,7 @@ class TestScheduleViews(TestCase):
         """Test that a plant's water schedule is updated when a plant is snoozed."""
 
         #new plant that is ready to water.
-        plant1 = Plant(id=1, name='Hoya', user_id=12, type_id=37, room_id=2, light_id=2)
+        plant1 = Plant(id=1, name='Hoya', user_id=1200, type_id=37, room_id=2, light_id=2)
         ws1 = WaterSchedule(id=1, water_date=datetime(2021, 5, 1), next_water_date=datetime.today(), water_interval=10, plant_id=1)
 
         db.session.add_all([plant1, ws1])
@@ -226,7 +226,7 @@ class TestScheduleViews(TestCase):
         """Test that a Water History is created when a plant is snoozed."""
 
         #new plant that is ready to water.
-        plant1 = Plant(id=1, name='Hoya', user_id=12, type_id=37, room_id=2, light_id=2)
+        plant1 = Plant(id=1, name='Hoya', user_id=1200, type_id=37, room_id=2, light_id=2)
         ws1 = WaterSchedule(id=1, water_date=datetime(2021, 5, 1), next_water_date=datetime.today(), water_interval=10, plant_id=1)
 
         db.session.add_all([plant1, ws1])
@@ -251,7 +251,7 @@ class TestScheduleViews(TestCase):
         """View a form to edit a Water Schedule."""
 
         #new plant that is ready to water.
-        plant1 = Plant(id=1, name='Hoya', user_id=12, type_id=37, room_id=2, light_id=2)
+        plant1 = Plant(id=1, name='Hoya', user_id=1200, type_id=37, room_id=2, light_id=2)
         ws1 = WaterSchedule(id=1, water_date=datetime(2021, 5, 1), next_water_date=datetime(2021, 5, 10), water_interval=10, plant_id=1)
 
         db.session.add_all([plant1, ws1])
@@ -272,7 +272,7 @@ class TestScheduleViews(TestCase):
         """Test that a water schedule's Manual Mode, Water Interval and Next Water Date change on update. Water date should remain the same."""
 
         #new plant that is ready to water.
-        plant2 = Plant(id=2, name='Calathea', user_id=10, type_id=17, room_id=1, light_id=1)
+        plant2 = Plant(id=2, name='Calathea', user_id=1000, type_id=17, room_id=1, light_id=1)
         ws2 = WaterSchedule(id=2, water_date=datetime(2021, 5, 1), next_water_date=datetime(2021, 5, 5), water_interval=7, plant_id=2)
 
         db.session.add_all([plant2, ws2])
@@ -297,7 +297,7 @@ class TestScheduleViews(TestCase):
         """View a plant's water history table."""
 
         #new plant that is ready to water.
-        plant1 = Plant(id=1, name='Hoya', user_id=12, type_id=37, room_id=2, light_id=2)
+        plant1 = Plant(id=1, name='Hoya', user_id=1200, type_id=37, room_id=2, light_id=2)
         ws1 = WaterSchedule(id=1, water_date=datetime(2021, 5, 1), next_water_date=datetime(2021, 5, 10), water_interval=10, plant_id=1)
 
         db.session.add_all([plant1, ws1])

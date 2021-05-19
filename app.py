@@ -618,7 +618,7 @@ def add_plant(room_id):
 
     if g.user.id == collection.user_id:
         if form.validate_on_submit():
-            print(request.values)
+            # print(request.values)
             img = request.files['image']
             #if the image exists, securely upload to user's s3 bucket
             if img.filename:

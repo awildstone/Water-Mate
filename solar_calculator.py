@@ -1,9 +1,7 @@
 """Solar Calculator & helper methods."""
 
 import requests, json
-from datetime import date, datetime, timedelta, timezone
-from tzlocal import get_localzone
-from zoneinfo import ZoneInfo
+from datetime import date, datetime, timedelta
 
 BASE_URL = 'https://api.sunrise-sunset.org/json'
 
@@ -31,7 +29,17 @@ class SolarCalculator:
     def convert_str_to_datetime(self, date, time):
         """Takes a date object and a time string, combines both into a string then returns the datetime object."""
 
-        date_time_str = date.strftime('%Y-%m-%d') + ' ' + time
+        converted_time = None
+        if time[-2:] != 'AM' and time[-2:] != 'PM': #added this condition to account for total_daylight case which does not have AM/PM.
+            converted_time = time
+        elif time[1] == ':':
+            length = len(time)
+            new_time = time.zfill(length + 1)
+            converted_time = self.convert_12_to_24(new_time)
+        else:
+            converted_time = self.convert_12_to_24(time)
+
+        date_time_str = date.strftime('%Y-%m-%d') + ' ' + converted_time
 
         return datetime.strptime(date_time_str, '%Y-%m-%d %H:%M:%S')
     
@@ -51,34 +59,6 @@ class SolarCalculator:
         #add 12 to hours and remove PM
         return str(int(string[:2]) + 12) + string[2:8]
 
-    def convert_UTC_to_localtime(self, date, time):
-        """Accepts a UTC datetime object and a 12-hour formatted string in UTC time. Converts UTC time to local time then
-        returns a newly formatted localtime datetime object.
-        Found solution on https://stackoverflow.com/questions/4770297/convert-utc-datetime-string-to-local-datetime 
-        and https://howchoo.com/g/ywi5m2vkodk/working-with-datetime-objects-and-timezones-in-python."""
-
-        converted_time = None
-        if time[1] == ':':
-            length = len(time)
-            new_time = time.zfill(length + 1)
-            converted_time = self.convert_12_to_24(new_time)
-        else:
-            converted_time = self.convert_12_to_24(time)
-
-        from_zone = ZoneInfo('UTC')
-        to_zone = get_localzone()
-
-        #build a utc formatted string from API response string
-        utc_date_time_str = date.strftime('%Y-%m-%d') + ' ' + converted_time
-        #parse string into datetime obj
-        utc_date_time = datetime.strptime(utc_date_time_str, '%Y-%m-%d %H:%M:%S')
-        #set datetime obj timezone to UTC
-        utc_date_time = utc_date_time.replace(tzinfo=from_zone)
-        #convert the datetime UTC object to local date/time
-        local_date_time = utc_date_time.astimezone(to_zone)
-
-        return local_date_time
-
     def get_data(self, day):
         """Calls the Sunset and sunrise times API for a given date with the user_location.
         Returns the JSON data in dict for this date/location.
@@ -95,9 +75,11 @@ class SolarCalculator:
 
         if response.json()['status'] == 'OK':
             return {'date': day, 
-            'sunrise': self.convert_UTC_to_localtime(day, results['sunrise']), 
-            'sunset': self.convert_UTC_to_localtime(day + timedelta(days=1), results['sunset']), #adding 1 day to account that the morning in UTC time falls in the evening of the previous day in Pacific Time (PST/PDT). I have some work to do to support different timezones but for now this works for timezones between UTC -5 to UTC -11.
-            'solar_noon': self.convert_UTC_to_localtime(day, results['solar_noon']), #add 12 hours to convert results from 12 hour time to 24 hour time.
+            'sunrise': self.convert_str_to_datetime(day, results['sunrise']),
+            # adding 1 day to account that the morning in UTC time falls in the evening of the previous day in Pacific Time (PST/PDT). 
+            # I have some work to do to support different timezones but for now this works for timezones between UTC -5 to UTC -11.
+            'sunset': self.convert_str_to_datetime(day + timedelta(days=1), results['sunset']),
+            'solar_noon': self.convert_str_to_datetime(day, results['solar_noon']),
             'day_length': self.convert_str_to_datetime(day, results['day_length'])}
 
     def get_solar_schedule(self):
@@ -128,6 +110,9 @@ class SolarCalculator:
 
     def get_daily_sunlight(self):
         """Calculates the maximum amount of light that a light_type can recieve given the user location, the date, and the type of light source. Uses data from the solar forecast to calculate the maximum sunlight potential for each day.
+
+        For calculating East and West lightsource types subtracting the later time from the first time difference = later_time - first_time creates a datetime object that only holds the difference.
+        
         Returns a list of time deltas that equal the maximum potential sunlight for each day."""
 
         solar_forcast = self.get_solar_schedule()
@@ -145,9 +130,9 @@ class SolarCalculator:
         for i in range(len(solar_forcast)):
             nh_light_calculations = {
                 "North": self.get_fraction_of_time(day_lengths[i].time(), .0625), #none to little sunlight - 1/16 of total daylight
-                "East": datetime.combine(date.min, solar_noon_times[i].time()) - datetime.combine(date.min, sunrise_times[i].time()), #sunrise-midday (soft morning light)
+                "East": solar_noon_times[i] - sunrise_times[i], #sunrise-midday (soft morning light)
                 "South": self.get_fraction_of_time(day_lengths[i].time(), 0.875), #sunrise to sunset - 7/8 of total daylight
-                "West": datetime.combine(date.min, sunset_times[i].time()) - datetime.combine(date.min, solar_noon_times[i].time()), #midday-sunset (hard afternoon light)
+                "West": sunset_times[i] - solar_noon_times[i], #midday-sunset (hard afternoon light)
                 "Northeast": self.get_fraction_of_time(day_lengths[i].time(), .125), # 1/8 of daily sun (soft morning light)
                 "Northwest": self.get_fraction_of_time(day_lengths[i].time(), .125), # 1/8 of daily sun (hard afternoon light)
                 "Southeast": self.get_fraction_of_time(day_lengths[i].time(), .75), #sunrise-midday (soft morning light) - 3/4 of total daylight
@@ -156,9 +141,9 @@ class SolarCalculator:
 
             sh_light_calculations = {
                 "North": self.get_fraction_of_time(day_lengths[i].time(), 0.875), #sunrise to sunset - 7/8 of total daylight
-                "East": datetime.combine(date.min,solar_noon_times[i].time()) - datetime.combine(date.min, sunrise_times[i].time()), #sunrise-midday (soft morning light)
+                "East": solar_noon_times[i] - sunrise_times[i], #sunrise-midday (soft morning light)
                 "South": self.get_fraction_of_time(day_lengths[i].time(), .0625), #none to little sunlight - 1/16 of total daylight
-                "West": datetime.combine(date.min, sunset_times[i].time()) - datetime.combine(date.min, solar_noon_times[i].time()), #midday-sunset (hard afternoon light)
+                "West": sunset_times[i] - solar_noon_times[i], #midday-sunset (hard afternoon light)
                 "Northeast": self.get_fraction_of_time(day_lengths[i].time(), .75), #sunrise-midday (soft morning light) - 3/4 of total daylight
                 "Northwest": self.get_fraction_of_time(day_lengths[i].time(), .75), #midday-sunset (hard afternoon light) - 3/4 of total daylight
                 "Southeast": self.get_fraction_of_time(day_lengths[i].time(), .125), # 1/8 of daily sun (soft morning light) 
@@ -173,4 +158,3 @@ class SolarCalculator:
                 plant_max_daily_light.append(sh_light_calculations[self.light_type])
             
         return plant_max_daily_light
-

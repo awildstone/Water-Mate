@@ -57,7 +57,7 @@ class TestUserViews(TestCase):
             username='peppercat',
             password='meowmeow')
 
-        self.user1.id = 10
+        self.user1.id = 1000
         db.session.commit()
 
         self.user2 = User.signup(
@@ -68,12 +68,12 @@ class TestUserViews(TestCase):
             username='kittenz',
             password='meowmeow')
 
-        self.user2.id = 12
+        self.user2.id = 1200
         db.session.commit()
 
         #set up test collections
-        collection1 = Collection(id=1, name='Home', user_id=10)
-        collection2 = Collection(id=2, name='My House', user_id=12)
+        collection1 = Collection(id=1, name='Home', user_id=1000)
+        collection2 = Collection(id=2, name='My House', user_id=1200)
         db.session.add_all([collection1, collection2])
         db.session.commit()
 
@@ -90,8 +90,8 @@ class TestUserViews(TestCase):
         db.session.commit()
         
         #set up test plants
-        plant1 = Plant(id=1, name='Hoya', image=None, user_id=10, type_id=37, room_id=1, light_id=1)
-        plant2 = Plant(id=2, name='Cactus', image=None, user_id=12, type_id=16, room_id=2, light_id=2)
+        plant1 = Plant(id=1, name='Hoya', image=None, user_id=1000, type_id=37, room_id=1, light_id=1)
+        plant2 = Plant(id=2, name='Cactus', image=None, user_id=1200, type_id=16, room_id=2, light_id=2)
         db.session.add_all([plant1, plant2])
         db.session.commit()
     
