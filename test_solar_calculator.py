@@ -1,6 +1,6 @@
 """Solar Calculator Tests."""
 
-#FLASK_ENV=production python3 -m unittest test_solar_calculator.py
+# FLASK_ENV=production python3 -m unittest test_solar_calculator.py
 
 from unittest import TestCase
 from datetime import date, datetime, timedelta, timezone
@@ -59,8 +59,8 @@ class TestSolarCalculator(TestCase):
 
         date1 = datetime(1990, 1, 5)
         date2 = datetime(2021, 4, 21)
-        time1 = '13:30:20'
-        time2 = '9:55:17'
+        time1 = '1:30:20 PM'
+        time2 = '9:55:17 AM'
 
         conversion1 = self.test1.convert_str_to_datetime(date1, time1)
         conversion2 = self.test2.convert_str_to_datetime(date2, time2)
@@ -85,41 +85,6 @@ class TestSolarCalculator(TestCase):
         self.assertEqual(self.test1.convert_12_to_24(time4), '10:30:45')
         self.assertEqual(self.test1.convert_12_to_24(time5), '00:00:59')
     
-    def test_convert_UTC_to_localtime(self):
-        """Test converting a UTC date/time into a local date/time.
-        
-        These tests are configured for local Pacific (PDT or PST) time. Additional
-        values are needed to test other local timezones."""
-
-        date1 = date(2010, 11, 19)
-        date2 = date(2021, 8, 7)
-        time1 = '5:10:09 PM'
-        time2 = '6:25:55 AM'
-
-        conversion1 = self.test1.convert_UTC_to_localtime(date1, time1)
-        conversion2 = self.test2.convert_UTC_to_localtime(date2, time2)
-
-        self.assertIsInstance(conversion1, datetime)
-        self.assertIsInstance(conversion2, datetime)
-
-        self.assertEqual(conversion1.year, 2010)
-        self.assertEqual(conversion1.day, 19)
-        self.assertEqual(conversion1.month, 11)
-        self.assertEqual(conversion2.year, 2021)
-        self.assertEqual(conversion2.month, 8)
-        self.assertEqual(conversion2.day, 7-1) #accounts for UTC -5 to UTC -11 because morning of UTC falls the previous day in local timezone
-
-        #The following tests assume that the local timezone is Pacific Time. Other timezones will fail these tests. Local timezone is set by the convert_UTC_to_localtime() method.
-
-        # 11/19/2010 was in PST time -8 hours behind UTC time 9:10:09 AM
-        self.assertEqual(conversion1.hour, 9)
-        self.assertEqual(conversion1.minute, 10)
-        self.assertEqual(conversion1.second, 9)
-        # 8/7/2021 will be in PDT time -7 hours behind UTC time 23:25:55 PM
-        self.assertEqual(conversion2.hour, 23)
-        self.assertEqual(conversion2.minute, 25)
-        self.assertEqual(conversion2.second, 55)
-    
     def test_get_data(self):
         """Test getting data from the sunrise/sunset API for a specific day/time."""
 
@@ -138,13 +103,13 @@ class TestSolarCalculator(TestCase):
 
         # "latitude": "47.466748", "longitude": "-122.34722"
         self.assertEqual(day1['sunrise'].day, 1)
-        self.assertEqual(day1['sunrise'].hour, 5)
+        self.assertEqual(day1['sunrise'].hour, 12)
         self.assertEqual(day1['sunrise'].minute, 50)
-        self.assertEqual(day1['sunset'].day, 1)
-        self.assertEqual(day1['sunset'].hour, 20)
+        self.assertEqual(day1['sunset'].day, 2)
+        self.assertEqual(day1['sunset'].hour, 3)
         self.assertEqual(day1['sunset'].minute, 22)
         self.assertEqual(day1['solar_noon'].day, 1)
-        self.assertEqual(day1['solar_noon'].hour, 13)
+        self.assertEqual(day1['solar_noon'].hour, 20)
         self.assertEqual(day1['solar_noon'].minute, 6)
         self.assertEqual(day1['day_length'].day, 1)
         self.assertEqual(day1['day_length'].hour, 14)
@@ -225,8 +190,9 @@ class TestSolarCalculator(TestCase):
         # solar_schedule1 = self.test1.get_solar_schedule()
         # print('Solar Noon: ', solar_schedule1[0]['solar_noon'].time())
         # print('Sunset: ', solar_schedule1[0]['sunset'].time())
-        # light type is West. Calculation is (solar_noon_times[i] - sunset_times[i]) = timedelta
-        # (solar_noon = 13:06:15) - (sunset = 20:23:31)  ~ 7:17:16
+        #
+        # light type is West. Calculation is (sunset_times[i] - solar_noon_times[i]) = timedelta
+        # (solar_noon = 20:06:15 5/2/21) to (sunset = 03:23:31 5/3/21) ~ 7:17:16
         self.assertEqual(daily_sunlight1[0], timedelta(seconds=26236))
 
         # for day in daily_sunlight1:
@@ -237,6 +203,7 @@ class TestSolarCalculator(TestCase):
         # print('Solar Noon: ', solar_schedule3[0]['solar_noon'].time())
         #light type is East. Calculation is sunrise_times[i] - solar_noon_times[i] = timedelta
         # (sunrise = 05:55:24) - (solar_noon = 13:07:34) = 7:12:10
+
         self.assertEqual(daily_sunlight3[0], timedelta(seconds=25930))
 
         # for day in daily_sunlight3:

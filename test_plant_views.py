@@ -59,7 +59,7 @@ class TestPlantViews(TestCase):
             username='peppercat',
             password='meowmeow')
 
-        self.user1.id = 10
+        self.user1.id = 1000
         db.session.commit()
 
         self.user2 = User.signup(
@@ -70,12 +70,12 @@ class TestPlantViews(TestCase):
             username='kittenz',
             password='meowmeow')
 
-        self.user2.id = 12
+        self.user2.id = 1200
         db.session.commit()
 
         #set up test collections
-        collection1 = Collection(id=1, name='Home', user_id=10)
-        collection2 = Collection(id=2, name='My House', user_id=12)
+        collection1 = Collection(id=1, name='Home', user_id=1000)
+        collection2 = Collection(id=2, name='My House', user_id=1200)
         db.session.add_all([collection1, collection2])
         db.session.commit()
 
@@ -92,7 +92,7 @@ class TestPlantViews(TestCase):
         db.session.commit()
         
         #set up test plants
-        plant1 = Plant(id=1, name='Hoya', image=None, user_id=10, type_id=37, room_id=1, light_id=1)
+        plant1 = Plant(id=1, name='Hoya', image=None, user_id=1000, type_id=37, room_id=1, light_id=1)
         db.session.add(plant1)
         db.session.commit()
 
@@ -109,9 +109,9 @@ class TestPlantViews(TestCase):
         #delete the s3 folders that were created for test_add_plant and test_edit_plant
         s3 = boto3.resource('s3', aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'), aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
         bucket = s3.Bucket(BUCKET_NAME)
-        for key in bucket.objects.filter(Prefix=f'uploads/user/{10}/'):
+        for key in bucket.objects.filter(Prefix=f'uploads/user/{1000}/'):
             key.delete()
-        for key in bucket.objects.filter(Prefix=f'uploads/user/{12}/'):
+        for key in bucket.objects.filter(Prefix=f'uploads/user/{1200}/'):
             key.delete()
 
     def test_view_plant_details(self):
@@ -166,7 +166,7 @@ class TestPlantViews(TestCase):
             with open('/Users/aimeewildstone/Desktop/rdt.png', 'rb') as img:
                 imgStringIO1 = BytesIO(img.read())
 
-            #this test will create folders in the s3 bucket /uploads/user/12/rdt.png
+            #this test will create folders in the s3 bucket /uploads/user/1200/rdt.png
             res = c.post('/collection/rooms/2/add-plant', content_type='multipart/form-data', data={'name': 'Sansevieria Fernwood', 'water_date': '', 'image': (imgStringIO1, 'rdt.png'), 'plant_type': 28, 'light_source': 2}, follow_redirects=True)
 
             plants = Plant.query.filter_by(room_id=2).all()
@@ -203,7 +203,7 @@ class TestPlantViews(TestCase):
             with open('/Users/aimeewildstone/Desktop/rdt.png', 'rb') as img:
                 imgStringIO1 = BytesIO(img.read())
             
-            #this test will create folders in the s3 bucket /uploads/user/10/rdt.png
+            #this test will create folders in the s3 bucket /uploads/user/1000/rdt.png
             res = c.post('/collection/room/plant/1/edit', data={'name': 'Hoya Publicayx', 'water_date': '2021-5-1', 'image': (imgStringIO1, 'rdt.png'), 'plant_type': 37, 'light_source': 1}, follow_redirects=True)
 
             self.assertEqual(res.status_code, 200)

@@ -25,7 +25,6 @@ class WaterCalculator:
             user_location=self.user.get_coordinates,
             current_date=self.water_schedule.water_date,
             water_interval=self.water_schedule.water_interval,
-            # light_type = self.light_type.type
             light_type = self.light_type
             )
 
@@ -34,8 +33,6 @@ class WaterCalculator:
         if (light_forcast):
             return light_forcast
         raise ConnectionRefusedError #not sure if this is the appropriate error I should be raising?
-
-        light_forcast_arr = light_forcast
     
     def convert_timedelta_to_float(self, time_delta):
         """Accepts a datetime.timedelta object, extracts the minutes and microseconds,
