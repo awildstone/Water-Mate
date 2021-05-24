@@ -1,9 +1,8 @@
 """Location Tests"""
 
-#FLASK_ENV=production python3 -m unittest test_location.py
+# FLASK_ENV=production python3 -m unittest test_location.py
 
 from unittest import TestCase
-import requests, json
 from dotenv import load_dotenv
 from location import UserLocation
 
@@ -17,7 +16,7 @@ class TestUserLocation(TestCase):
         paris = UserLocation(city='Paris', country='France')
         queenstown = UserLocation(city='Queenstown', country='NZ')
         victoria = UserLocation(city='Victoria', state='BC', country='Canada')
-        bejing = UserLocation(city='bejing', country='China')
+        bejing = UserLocation(city='Bejing', country='China')
         vague_city = UserLocation(city='Springfield')
         fake_city = UserLocation(city='Faker', country='Mexico')
 
