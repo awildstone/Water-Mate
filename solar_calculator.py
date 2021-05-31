@@ -2,6 +2,8 @@
 
 import requests, json
 from datetime import date, datetime, timedelta
+from tzlocal import get_localzone
+
 
 BASE_URL = 'https://api.sunrise-sunset.org/json'
 
@@ -59,12 +61,50 @@ class SolarCalculator:
         #add 12 to hours and remove PM
         return str(int(string[:2]) + 12) + string[2:8]
 
+    def get_utc_difference(self):
+        """Gets the local system timezone and returns the current timezone difference in hours from UTC."""
+        # get system timezone  
+        local_tz = get_localzone()
+        # get current date/timezone
+        date = datetime.now(local_tz);
+        # get the total seconds difference from UTC time
+        utc_offset =  date.utcoffset().total_seconds()
+        return utc_offset / 60 / 60
+
+
     def get_data(self, day):
         """Calls the Sunset and sunrise times API for a given date with the user_location.
         Returns the JSON data in dict for this date/location.
         {"date": date, "sunrise": sunrise, "sunset": sunset, "day_length": day_length, "solar_noon": solar_noon}.
+
+        The API will always return the data for the provided geocoordinates but in UTC time instead of the local time,
+        and our application only knows dates and times that are timezone naive and assume that sunrise/sunset will
+        fall on the same day (because they do).
+
+        Therefore, adjustments are needed for different timezones to account for the fact that in some timezones sunset
+        falls on the next day in UTC and in other timezones, sunrise falls on the previous day in UTC.
+
+        Timezones -12 to +5 must add 1 day to the sunset time so that our application correctly calculates the time difference.
+        This is because sunset time will fall on the following day in UTC time for these timezones.
+
+        For example:
+        - In Seattle, WA on 5/30/21 the UTC difference is -7
+        - Sunrise in localtime is 5:16 AM on Sunday 5/30, but the API provided time is 12:16 PM UTC.
+        - Sunset in localtime is 8:57 PM on Sunday 5/30, but the API provided time is 3:57 AM UTC.
+        - Our application thinks that sunrise is 12:16 PM and sunset is 3:57 AM on 5/30 which will calculate the time difference incorrectly
+        so we add a day to our sunset time so our application knows we are working with 12:16 PM 5/30 to 3:57 AM 5/31.
+
+        Timezones +6 to +12 must subtract 1 day from the sunrise time so that our application correctly calculates the time difference.
+        This is because sunrise will fall on the previous day in UTC time for these timezones.
+
+        For example:
+        - In Dhaka, Bangladesh on 5/30/21 the UTC difference is +6
+        - Sunrise in localtime is 5:11 AM on Sunday 5/30, but the time provided by the API is 11:11 PM UTC.
+        - Sunset in localtime is 6:40 PM on Sunday 5/20, but the API  provided time is 12:40 PM UTC.
+        - Our application thinks that sunrise is 11:11 PM 5/30 and sunset is 12:40 PM 5/30 and this will calculate the time difference incorrectly
+        so we subtract 1 day from sunrise so our application knows we are working with 11:11 PM 5/29 to 12:40 PM 5/30.
         
-        Currently, this only supports conversions from UTC to timezones between UTC -5 to UTC -11."""
+        """
 
         response = requests.get(BASE_URL, params={
             'lat': self.user_location['latitude'], 
@@ -73,14 +113,26 @@ class SolarCalculator:
         
         results = response.json()['results']
 
+        # Get the system time UTC difference in hours.
+        # This will tell us which timezone the current local time falls under and therefore which date modification to use in our time calculations.
+        utc_diff = self.get_utc_difference()
+
         if response.json()['status'] == 'OK':
-            return {'date': day, 
-            'sunrise': self.convert_str_to_datetime(day, results['sunrise']),
-            # adding 1 day to account that the morning in UTC time falls in the evening of the previous day in Pacific Time (PST/PDT). 
-            # I have some work to do to support different timezones but for now this works for timezones between UTC -5 to UTC -11.
-            'sunset': self.convert_str_to_datetime(day + timedelta(days=1), results['sunset']),
-            'solar_noon': self.convert_str_to_datetime(day, results['solar_noon']),
-            'day_length': self.convert_str_to_datetime(day, results['day_length'])}
+            # If the utc_diff is -12 to 5 hours difference from UTC add 1 day to sunset calculation.
+            if utc_diff in range(-12, 6):
+                return {'date': day, 
+                    'sunrise': self.convert_str_to_datetime(day, results['sunrise']),
+                    'sunset': self.convert_str_to_datetime(day + timedelta(days=1), results['sunset']),
+                    'solar_noon': self.convert_str_to_datetime(day, results['solar_noon']),
+                    'day_length': self.convert_str_to_datetime(day, results['day_length'])}
+
+            # If the utc_diff is 6 to 12 hours difference from UTC subract 1 day from sunrise calculation.
+            if utc_diff in range(6, 13):
+                return {'date': day, 
+                    'sunrise': self.convert_str_to_datetime(day - timedelta(days=1), results['sunrise']),
+                    'sunset': self.convert_str_to_datetime(day, results['sunset']),
+                    'solar_noon': self.convert_str_to_datetime(day, results['solar_noon']),
+                    'day_length': self.convert_str_to_datetime(day, results['day_length'])}
 
     def get_solar_schedule(self):
         """Generates and returns a list of data for given number of dates:
@@ -116,6 +168,7 @@ class SolarCalculator:
         Returns a list of time deltas that equal the maximum potential sunlight for each day."""
 
         solar_forcast = self.get_solar_schedule()
+        # print(solar_forcast)
         
         solar_noon_times = [date['solar_noon'] for date in solar_forcast]
         sunrise_times = [date['sunrise'] for date in solar_forcast]
@@ -157,4 +210,4 @@ class SolarCalculator:
                 #user is in the southern hemisphere
                 plant_max_daily_light.append(sh_light_calculations[self.light_type])
             
-        return plant_max_daily_light
+        return plant_max_daily_light      
