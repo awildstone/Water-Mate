@@ -105,11 +105,12 @@ class SolarCalculator:
         so we subtract 1 day from sunrise so our application knows we are working with 11:11 PM 5/29 to 12:40 PM 5/30.
         
         """
-
+        
+        # convert the datetime.datetime object into a date with day.date()
         response = requests.get(BASE_URL, params={
             'lat': self.user_location['latitude'], 
             'lng': self.user_location['longitude'], 
-            'date': day})
+            'date': day.date()})
         
         results = response.json()['results']
 
